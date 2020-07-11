@@ -5,7 +5,6 @@ static CameraController camController = CameraController();
 
 void game::initialize(GLFWwindow* window)
 {
-	//camController = CameraController();
 	inputManager::initialize(window);
 }
 

@@ -179,7 +179,9 @@
     <ClInclude Include="src\input_handlers\MouseEventHandler.h" />
     <ClInclude Include="src\Render\Renderer.h" />
     <ClInclude Include="src\Render\View.h" />
+    <ClInclude Include="src\Settings\CamearaControllersettings.h" />
     <ClInclude Include="src\Settings\fov.h" />
+    <ClInclude Include="src\Settings\InputsList.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_vector_relational.hpp" />

@@ -7,6 +7,7 @@ static float forward = 0.0f;
 static float mousex = 0.0f;
 static float mousey = 0.0f;
 static float fly = 0.0f;
+static float shift = 0.0f;
 
 float inputManager::getInput(Input input)
 {
@@ -22,6 +23,8 @@ float inputManager::getInput(Input input)
 		return mousey;
 	case Input::FLY:
 		return fly;
+	case Input::SHIFT:
+		return shift;
 	}
 }
 
@@ -33,4 +36,6 @@ void inputManager::initialize(GLFWwindow* window)
 	input::addKeyboardBinding(&forward, GLFW_KEY_W, GLFW_KEY_S);
 	input::addKeyboardBinding(&right, GLFW_KEY_D, GLFW_KEY_A);
 	input::addKeyboardBinding(&fly, GLFW_KEY_SPACE, GLFW_KEY_LEFT_CONTROL);
+	input::addKeyboardBinding(&shift, GLFW_KEY_LEFT_SHIFT);
+
 }

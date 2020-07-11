@@ -114,7 +114,6 @@ static unsigned int CreateShader(const std::string& vertexShader, const std::str
     glDeleteShader(fs);
 
     return program;
-        
 }
 
 
@@ -188,7 +187,6 @@ int main(void)
 
         VertexBuffer vb(positions, sizeof(positions));
 
-        
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
@@ -211,12 +209,10 @@ int main(void)
         int Location_View = glGetUniformLocation(shader, "u_View");
         int Location_Projection = glGetUniformLocation(shader, "u_Projection");
 
-
         glUseProgram(shader);
 
         game::initialize(window);
 
-        
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window))
         {

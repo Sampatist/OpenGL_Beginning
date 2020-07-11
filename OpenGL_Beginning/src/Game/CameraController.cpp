@@ -5,8 +5,9 @@
 
 constexpr float SENSITIVITY = 0.0005f;
 constexpr float SPEED = 0.01f;
-constexpr float YAW_ANGLE_UPPER_LIMIT = 1.57;
-constexpr float YAW_ANGLE_LOWER_LIMIT = -1.57;
+constexpr float SPEED_MULTIPLIER = 2.5f;
+constexpr float YAW_ANGLE_UPPER_LIMIT = 1.57f;
+constexpr float YAW_ANGLE_LOWER_LIMIT = -1.57f;
 
 void CameraController::update()
 {
@@ -18,6 +19,7 @@ void CameraController::update()
 	float right = inputManager::getInput(inputManager::Input::RIGHT);
 	float forward = inputManager::getInput(inputManager::Input::FORWARD);
 	float fly = inputManager::getInput(inputManager::Input::FLY);
+	float shift = inputManager::getInput(inputManager::Input::SHIFT);
 
 	float mouseyWithLimit = std::max(YAW_ANGLE_LOWER_LIMIT, std::min(cumulativeMousey * SENSITIVITY, YAW_ANGLE_UPPER_LIMIT));
 
@@ -32,5 +34,6 @@ void CameraController::update()
 		camera.GetPosition() + 
 		(glm::abs(glm::length(translate)) ? 
 		 glm::normalize(translate) : 
-		 glm::vec3(0.0f)) * SPEED);
+		 glm::vec3(0.0f)) * 
+		 SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
 }
