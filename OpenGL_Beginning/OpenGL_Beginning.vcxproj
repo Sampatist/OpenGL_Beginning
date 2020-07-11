@@ -20,7 +20,10 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
-    <ClCompile Include="src\Render\Camera.cpp" />
+    <ClCompile Include="src\Game\Camera.cpp" />
+    <ClCompile Include="src\Game\CameraController.cpp" />
+    <ClCompile Include="src\Game\game.cpp" />
+    <ClCompile Include="src\Game\inputs.cpp" />
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\input_handlers\KeyboardEventHandler.cpp" />
     <ClCompile Include="src\input_handlers\MouseEventHandler.cpp" />
@@ -167,11 +170,14 @@
     <None Include="src\vendor\glm\gtx\wrap.inl" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="src\Game\Camera.h" />
+    <ClInclude Include="src\Game\CameraController.h" />
+    <ClInclude Include="src\Game\game.h" />
+    <ClInclude Include="src\Game\inputs.h" />
     <ClInclude Include="src\Render\IndexBuffer.h" />
     <ClInclude Include="src\input_handlers\KeyboardEventHandler.h" />
     <ClInclude Include="src\input_handlers\MouseEventHandler.h" />
     <ClInclude Include="src\Render\Renderer.h" />
-    <ClInclude Include="src\Render\Camera.h" />
     <ClInclude Include="src\Render\View.h" />
     <ClInclude Include="src\Settings\fov.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
@@ -532,7 +538,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src\render;src\vendor;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\glew-2.1.0\include;$(SolutionDir)OpenGL_Beginning\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src\Game;src\render;src\vendor;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\glew-2.1.0\include;$(SolutionDir)OpenGL_Beginning\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -549,7 +555,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>GLEW_STATIC;WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>src\render;src\vendor;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\glew-2.1.0\include;$(SolutionDir)OpenGL_Beginning\src</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>src\Game;src\render;src\vendor;$(SolutionDir)Dependencies\GLFW\include;$(SolutionDir)Dependencies\glew-2.1.0\include;$(SolutionDir)OpenGL_Beginning\src</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

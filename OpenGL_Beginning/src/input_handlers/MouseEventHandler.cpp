@@ -16,8 +16,8 @@ static struct MouseBind
 
 static std::vector<MouseBind> mouseBinds;
 
-static float oldMouseX;
-static float oldMouseY;
+static double oldMouseX;
+static double oldMouseY;
 
 static float* mX;
 static float* mY;
@@ -27,10 +27,8 @@ static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
     double deltaX = oldMouseX - xpos;
     double deltaY = oldMouseY - ypos;
     
-    *mX -= deltaY / 500;
-    *mY += deltaX / 500;
-
-    *mX = std::fmin(3.1 / 2, std::fmax(-3.1 / 2, *mX));
+    *mX += deltaX;
+    *mY += deltaY;
 
     oldMouseX = xpos;
     oldMouseY = ypos;

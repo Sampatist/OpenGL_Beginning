@@ -7,7 +7,7 @@ constexpr float ZNEAR = 0.1f;
 constexpr float ZFAR = 320.0f;
 
 
-inline glm::mat4 ViewMatrix(Camera& Camera) {
+inline glm::mat4 ViewMatrix(const Camera& Camera) {
 
 	return glm::lookAt(Camera.GetPosition(), Camera.GetPosition() + Camera.GetCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
 }

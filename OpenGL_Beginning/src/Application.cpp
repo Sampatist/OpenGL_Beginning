@@ -6,7 +6,7 @@
 #include <string>
 #include <sstream>
 
-#define GLM_FORCE_INLINE 
+#define GLM_FORCE_INLINE
 
 #include <Render/Renderer.h>
 
@@ -23,6 +23,21 @@
 #include <input_handlers/MouseEventHandler.h>
 
 #include <View.h>
+#include "game.h"
+
+void GLAPIENTRY
+MessageCallback(GLenum source,
+    GLenum type,
+    GLuint id,
+    GLenum severity,
+    GLsizei length,
+    const GLchar* message,
+    const void* userParam)
+{
+    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
+        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
+        type, severity, message);
+}
 
 struct ShaderProgramSource
 {
@@ -130,6 +145,10 @@ int main(void)
 
     if (glewInit() != GLEW_OK)
         return -1;
+
+    glEnable(GL_DEBUG_OUTPUT);
+    glDebugMessageCallback(MessageCallback, 0);
+
     {
         float positions[] = {
             -0.5f, -0.5f,  0.0f, //0
@@ -165,10 +184,11 @@ int main(void)
 
         unsigned int vao;
         glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);
+        glBindVertexArray(vao);   /*class vao*/
 
         VertexBuffer vb(positions, sizeof(positions));
 
+        
         glEnableVertexAttribArray(0);
         glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 3, 0);
 
@@ -182,10 +202,7 @@ int main(void)
         */
         unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
 
-
         int location = glGetUniformLocation(shader, "u_Color");
-
-
 
         float r = 0.0f;
         float increment = 0.05f;
@@ -194,39 +211,44 @@ int main(void)
         int Location_View = glGetUniformLocation(shader, "u_View");
         int Location_Projection = glGetUniformLocation(shader, "u_Projection");
 
-        glm::mat4x4 ModelMatrix(1);
-        ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
-        
-        Camera Camera_(glm::vec3(0, 0, 1), glm::vec3(0, 0, -1));
 
         glUseProgram(shader);
 
+        game::initialize(window);
+
+        
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window))
         {
             /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
 
+            game::run();
+
             glUniform4f(location, r, 1.0f - r, 1.0f + r / 2, 1.0f);
 
-            ModelMatrix = glm::rotate(ModelMatrix, glm::radians(2.0f+r), glm::vec3(1, 1, 1));
-            glUniformMatrix4fv(Location_Model, 1, GL_FALSE, &ModelMatrix[0][0]);
+            //ModelMatrix = glm::rotate(ModelMatrix, glm::radians(0.1f+r), glm::vec3(1, 1, 1));
 
-            glUniformMatrix4fv(Location_View, 1, GL_FALSE, &ViewMatrix(Camera_)[0][0]);
+            glUniformMatrix4fv(Location_View, 1, GL_FALSE, &ViewMatrix(game::getcamcont().getCamera())[0][0]);
 
             glUniformMatrix4fv(Location_Projection, 1, GL_FALSE, &ProjectionMatrix(45,4/3.0f)[0][0]);
-
 
             glBindVertexArray(vao);
             ib.Bind();
 
+            glm::mat4x4 ModelMatrix(1.0f);
+            ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
+            glUniformMatrix4fv(Location_Model, 1, GL_FALSE, &ModelMatrix[0][0]);
+            glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
+
+            ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
+            glUniformMatrix4fv(Location_Model, 1, GL_FALSE, &ModelMatrix[0][0]);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
             if (r > 1.0f)
                 increment = -0.01f;
             else if (r < 0.0f)
                 increment = 0.01f;
-
 
             r += increment;
 
