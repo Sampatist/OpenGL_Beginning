@@ -1,6 +1,7 @@
 #include "inputs.h"
 #include "input_handlers/KeyboardEventHandler.h"
 #include "input_handlers/MouseEventHandler.h"
+#include "Settings.h"
 
 static float right = 0.0f;
 static float forward = 0.0f;
@@ -33,9 +34,8 @@ void inputManager::initialize(GLFWwindow* window)
 	input::bindKeyboard(window);
 	input::bindMouse(window);
 	input::updateMouse(&mousex, &mousey);
-	input::addKeyboardBinding(&forward, GLFW_KEY_W, GLFW_KEY_S);
-	input::addKeyboardBinding(&right, GLFW_KEY_D, GLFW_KEY_A);
-	input::addKeyboardBinding(&fly, GLFW_KEY_SPACE, GLFW_KEY_LEFT_CONTROL);
+	input::addKeyboardBinding(&forward, Settings::forward, Settings::back);
+	input::addKeyboardBinding(&right, Settings::right, Settings::left);
+	input::addKeyboardBinding(&fly, Settings::up, Settings::down);
 	input::addKeyboardBinding(&shift, GLFW_KEY_LEFT_SHIFT);
-
 }

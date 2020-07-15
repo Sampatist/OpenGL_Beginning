@@ -1,0 +1,21 @@
+
+FORMAT
+#KEY = "VALUE"
+
+#INGAME
+
+SENSITIVITY = "2.5"
+
+#CONTROLS
+
+FORWARD = "87"
+BACK = "83"
+RIGHT = "68"
+LEFT = "65"
+
+UP = "32"
+DOWN = "341"
+
+#RENDER
+
+FOV = "4.0"

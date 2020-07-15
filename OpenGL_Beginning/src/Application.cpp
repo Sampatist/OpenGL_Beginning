@@ -24,6 +24,9 @@
 
 #include <View.h>
 #include "game.h"
+#include "Shader.h"
+
+#include "Settings.h"
 
 void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -38,84 +41,6 @@ MessageCallback(GLenum source,
         (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
         type, severity, message);
 }
-
-struct ShaderProgramSource
-{
-    std::string VertexSource;
-    std::string FragmentSource;
-};
-
-static ShaderProgramSource ParseShader(const std::string& filepath)
-{
-    std::ifstream stream(filepath);
-
-    enum class ShaderType
-    {
-        NONE = 0, VERTEX = 1, FRAGMENT = 2
-    };
-
-    std::string line;
-    std::stringstream ss[3];
-    ShaderType type = ShaderType::NONE;
-    while (getline(stream, line))
-    {
-        if (line.find("#shader") != std::string::npos)
-        {
-            if (line.find("vertex") != std::string::npos)
-                type = ShaderType::VERTEX;
-            else if (line.find("fragment") != std::string::npos)
-                type = ShaderType::FRAGMENT;
-        }
-        else
-        {
-            ss[(int)type] << line << "\n";
-        }
-    }
-    return { ss[1].str(), ss[2].str() };
-}
-
-static unsigned int CompileShader(unsigned int type, const std::string& source)
-{
-    unsigned int id = glCreateShader(type);
-    const char* src = source.c_str();
-    glShaderSource(id, 1, &src, nullptr);
-    glCompileShader(id);
-
-    int result;
-    glGetShaderiv(id, GL_COMPILE_STATUS, &result);
-    if (result == GL_FALSE)
-    {
-        int length; 
-        glGetShaderiv(id, GL_INFO_LOG_LENGTH, &length);
-        char* message = (char*)_malloca(length * sizeof(char));
-        glGetShaderInfoLog(id, length, &length, message);
-        std::cout << "Failed to compile " << (type == GL_VERTEX_SHADER ? "vertex " : "fragment") << " shader!" << std::endl;
-        std::cout << message << std::endl;
-
-        glDeleteShader(id);
-        return 0;
-    }
-
-    return id;
-}
-
-static unsigned int CreateShader(const std::string& vertexShader, const std::string& fragmentShader)
-{
-    unsigned int program = glCreateProgram();
-    unsigned int vs = CompileShader(GL_VERTEX_SHADER, vertexShader);
-    unsigned int fs = CompileShader(GL_FRAGMENT_SHADER, fragmentShader);
-
-    glAttachShader(program, vs);
-    glAttachShader(program, fs);
-    glLinkProgram(program);
-    glValidateProgram(program);
-
-    glDeleteShader(vs);
-    glDeleteShader(fs);
-
-    return program;
-}
-
 
 int main(void)
 {
@@ -140,7 +65,8 @@ int main(void)
     /* Make the window's context current */
     glfwMakeContextCurrent(window);
 
-    glfwSwapInterval(1);                                /****************************************************************************************/
+    /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
+    glfwSwapInterval(1);           
 
     if (glewInit() != GLEW_OK)
         return -1;
@@ -183,7 +109,7 @@ int main(void)
 
         unsigned int vao;
         glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);   /*class vao*/
+        glBindVertexArray(vao);  
 
         VertexBuffer vb(positions, sizeof(positions));
 
@@ -192,61 +118,47 @@ int main(void)
 
         IndexBuffer ib(indicies, 6 * 6);
 
-        ShaderProgramSource source = ParseShader("res/shaders/Basic.shader");
-        /*std::cout << "VERTEX" << std::endl;
-        std::cout << source.VertexSource << std::endl;
-        std::cout << "FRAGMENT" << std::endl;
-        std::cout << source.FragmentSource << std::endl;
-        */
-        unsigned int shader = CreateShader(source.VertexSource, source.FragmentSource);
-
-        int location = glGetUniformLocation(shader, "u_Color");
-
-        float r = 0.0f;
-        float increment = 0.05f;
-
-        int Location_Model = glGetUniformLocation(shader, "u_Model");
-        int Location_View = glGetUniformLocation(shader, "u_View");
-        int Location_Projection = glGetUniformLocation(shader, "u_Projection");
-
-        glUseProgram(shader);
+        //SHADER
+        Shader shader("res/shaders/Basic.shader");
+        shader.Bind();
 
         game::initialize(window);
+
+        shader.SetUniform4f("u_Color", 1.0f, 1.0f, 1.0f, 1.0f);
+
+        int frameCount = 0;
+        int lastTime = glfwGetTime();
 
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(window))
         {
+            frameCount++;
+            if(glfwGetTime() - lastTime >= 1.0f)
+            {
+                printf("%f ms/frame, %d fps\n",1000.0f / frameCount, frameCount);
+                frameCount = 0;
+                lastTime = glfwGetTime();
+			}
+
             /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
 
             game::run();
 
-            glUniform4f(location, r, 1.0f - r, 1.0f + r / 2, 1.0f);
-
-            //ModelMatrix = glm::rotate(ModelMatrix, glm::radians(0.1f+r), glm::vec3(1, 1, 1));
-
-            glUniformMatrix4fv(Location_View, 1, GL_FALSE, &ViewMatrix(game::getcamcont().getCamera())[0][0]);
-
-            glUniformMatrix4fv(Location_Projection, 1, GL_FALSE, &ProjectionMatrix(45,4/3.0f)[0][0]);
+            shader.SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix(game::getcamcont().getCamera())[0][0]);
+            shader.SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(45,4/3.0f)[0][0]);
 
             glBindVertexArray(vao);
             ib.Bind();
 
             glm::mat4x4 ModelMatrix(1.0f);
             ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
-            glUniformMatrix4fv(Location_Model, 1, GL_FALSE, &ModelMatrix[0][0]);
+            shader.SetUniformMatrix4f("u_Model", 1, GL_FALSE,&ModelMatrix[0][0]);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
             ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-            glUniformMatrix4fv(Location_Model, 1, GL_FALSE, &ModelMatrix[0][0]);
+            shader.SetUniformMatrix4f("u_Model", 1, GL_FALSE,&ModelMatrix[0][0]);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
-
-            if (r > 1.0f)
-                increment = -0.01f;
-            else if (r < 0.0f)
-                increment = 0.01f;
-
-            r += increment;
 
             /* Swap front and back buffers */
             glfwSwapBuffers(window);
@@ -255,7 +167,6 @@ int main(void)
             glfwPollEvents();
         }
 
-        glDeleteProgram(shader);
     }
     glfwTerminate();
     return 0;

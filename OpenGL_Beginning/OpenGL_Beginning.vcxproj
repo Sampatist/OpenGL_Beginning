@@ -24,10 +24,12 @@
     <ClCompile Include="src\Game\CameraController.cpp" />
     <ClCompile Include="src\Game\game.cpp" />
     <ClCompile Include="src\Game\inputs.cpp" />
+    <ClCompile Include="src\Game\Settings.cpp" />
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\input_handlers\KeyboardEventHandler.cpp" />
     <ClCompile Include="src\input_handlers\MouseEventHandler.cpp" />
     <ClCompile Include="src\Render\Renderer.cpp" />
+    <ClCompile Include="src\Render\Shader.cpp" />
     <ClCompile Include="src\Render\VertexBuffer.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -178,9 +180,12 @@
     <ClInclude Include="src\input_handlers\KeyboardEventHandler.h" />
     <ClInclude Include="src\input_handlers\MouseEventHandler.h" />
     <ClInclude Include="src\Render\Renderer.h" />
+    <ClInclude Include="src\Render\Shader.h" />
     <ClInclude Include="src\Render\View.h" />
     <ClInclude Include="src\Settings\CamearaControllersettings.h" />
     <ClInclude Include="src\Settings\fov.h" />
+    <ClInclude Include="src\Settings\FrameLimit.h" />
+    <ClInclude Include="src\Game\Settings.h" />
     <ClInclude Include="src\Settings\InputsList.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
@@ -465,6 +470,9 @@
     <ClInclude Include="src\vendor\glm\vec4.hpp" />
     <ClInclude Include="src\vendor\glm\vector_relational.hpp" />
     <ClInclude Include="src\Render\VertexBuffer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Text Include="res\settings.txt" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>16.0</VCProjectVersion>
