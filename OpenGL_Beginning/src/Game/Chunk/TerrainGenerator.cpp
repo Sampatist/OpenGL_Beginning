@@ -1,9 +1,12 @@
 #include "TerrainGenerator.h"
 #include "Mr.Noise/SimplexNoise.h"
 #include <iostream>
+
 #include <functional> 
+#define SEED "245136"
 
-
+//std::hash<std::string> TerrainHash;
+//int HashValue = TerrainHash(SEED);
 
 constexpr int OCTAVES = 5;
 constexpr int WATER_LEVEL = 100;
@@ -14,7 +17,6 @@ static SimplexNoise noise;
 
 std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> TerrainGenerator::generateTerrain(int x, int z, int y)
 {
-
 	std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> blocks{ 0 };
 
 	for (int i = 0; i < CHUNK_WIDTH; i++)

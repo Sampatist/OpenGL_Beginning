@@ -3,20 +3,15 @@
 #include "Settings.h"
 #include "Renderer.h"
 
-static CameraController camController = CameraController();
 
 void Game::initialize()
 {
 	Settings::readSettingsFile();
-	inputManager::initialize(Renderer::getWindow());
+	inputManager::initialize();
+	ChunkManager::start();
 }
 
 void Game::run()
 {
-	camController.update();
-}
-
-CameraController& Game::getcamcont()
-{
-	return camController;
+	CameraController::update();
 }

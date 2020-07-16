@@ -179,6 +179,7 @@
     <ClInclude Include="src\Game\Camera.h" />
     <ClInclude Include="src\Game\CameraController.h" />
     <ClInclude Include="src\Game\Chunk\Chunk.h" />
+    <ClInclude Include="src\Game\Chunk\CHUNKARRAY.h" />
     <ClInclude Include="src\Game\Chunk\ChunkManager.h" />
     <ClInclude Include="src\Game\Chunk\TerrainGenerator.h" />
     <ClInclude Include="src\Game\Game.h" />

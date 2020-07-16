@@ -25,10 +25,8 @@
 
 #include "Settings.h"
 
-
 //genTerrain TEST
 #include "Chunk/TerrainGenerator.h"
-
 
 int main(void)
 {
@@ -88,7 +86,7 @@ int main(void)
 
         /// 
         int frameCount = 0;
-        int lastTime = glfwGetTime();
+        double lastTime = glfwGetTime();
         ///
 
         //std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT>* heapBlocks =
@@ -99,34 +97,28 @@ int main(void)
         //    std::cout << (int)heapBlocks->at(INDEX(i,0,0));
         //}
 
-        std::vector<Chunk> chunks;
-        for(int i = 0; i < 21; i++)
-        {
-            for (int j = 0; j < 21; j++)
-                chunks.emplace_back(i, j, 0);
-		}
-
         /* Loop until the user closes the window */
         while (!glfwWindowShouldClose(Renderer::getWindow()))
         {
                    
             //Frame
-          //  frameCount++;
-          //  if (glfwGetTime() - lastTime >= 1.0f)
-          //  {
-          //      printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
-          //      frameCount = 0;
-          //      lastTime = glfwGetTime();
-          //  }
-            //////
+            frameCount++;
+            if (glfwGetTime() - lastTime >= 1.0f)
+            {
+                //printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
+                frameCount = 0;
+                lastTime = glfwGetTime();
+                ChunkManager::update();
+            }
+             //////
 
             /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
 
             Game::run();
 
-            shader.SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix(Game::getcamcont().getCamera())[0][0]);
-            shader.SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(45, 4 / 3.0f)[0][0]);
+            shader.SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix()[0][0]);
+            shader.SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(4 / 3.0f)[0][0]);
 
             glBindVertexArray(vao);
             ib.Bind();

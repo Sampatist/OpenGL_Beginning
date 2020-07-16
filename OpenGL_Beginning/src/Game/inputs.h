@@ -1,5 +1,4 @@
 #pragma once
-#include "Renderer.h"
 
 namespace inputManager
 {
@@ -17,5 +16,5 @@ namespace inputManager
 		MOUSERIGHT,
 	};
 	float getInput(Input input);
-	void initialize(GLFWwindow* window);
+	void initialize();
 }

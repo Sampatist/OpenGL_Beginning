@@ -2,5 +2,6 @@
 
 namespace ChunkManager
 {
+	void start();
 	void update();
 }

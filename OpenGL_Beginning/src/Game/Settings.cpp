@@ -19,6 +19,9 @@ int Settings::left    = 0;
 int Settings::up      = 0;
 int Settings::down    = 0;
 
+//Game
+int Settings::viewDistance = 0;
+
 //Map
 std::unordered_map<std::string, int> settingsMap =
 {
@@ -30,6 +33,7 @@ std::unordered_map<std::string, int> settingsMap =
 	{"LEFT",        5},
 	{"UP",          6},
 	{"DOWN",        7},
+	{"VIEWDISTANCE",8},
 };
 
 void Settings::readSettingsFile()
@@ -68,10 +72,15 @@ void Settings::readSettingsFile()
 					break;
 				case 5:
 					left = std::stoi(value);
+					break;
 				case 6:
 					up = std::stoi(value);
+					break;
 				case 7:
 					down = std::stoi(value);
+					break;
+				case 8:
+					viewDistance = std::stoi(value);
 					break;
 			}
 		}

@@ -7,7 +7,6 @@ namespace Settings
 	extern float fov;
 	extern float sensitivity;
 
-
 	extern int forward;
 	extern int back;
 	extern int left;
@@ -15,6 +14,8 @@ namespace Settings
 		   
 	extern int up;
 	extern int down;
+
+	extern int viewDistance;
 
 	// beyanlar
 	void readSettingsFile();

@@ -5,6 +5,7 @@ FORMAT
 #INGAME
 
 SENSITIVITY = "2.5"
+VIEWDISTANCE = "25"
 
 #CONTROLS
 
@@ -18,4 +19,4 @@ DOWN = "341"
 
 #RENDER
 
-FOV = "4.0"
+FOV = "45.0"
