@@ -1,11 +1,10 @@
 #include "Settings.h"
-#include "GLFW/glfw3.h"
-
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <sstream>
 #include <unordered_map>
+#include "Renderer.h"
 
 //View
 float Settings::fov = 0.0f; 

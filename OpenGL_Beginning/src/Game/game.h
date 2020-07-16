@@ -2,9 +2,9 @@
 #include "CameraController.h"
 #include "inputs.h"
 
-namespace game
+namespace Game
 {
-	void initialize(GLFWwindow* window);
+	void initialize();
 	void run();
 	CameraController& getcamcont();
 }

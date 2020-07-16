@@ -1,21 +1,22 @@
 #include "game.h"
 #include "inputs.h"
 #include "Settings.h"
+#include "Renderer.h"
 
 static CameraController camController = CameraController();
 
-void game::initialize(GLFWwindow* window)
+void Game::initialize()
 {
 	Settings::readSettingsFile();
-	inputManager::initialize(window);
+	inputManager::initialize(Renderer::getWindow());
 }
 
-void game::run()
+void Game::run()
 {
 	camController.update();
 }
 
-CameraController& game::getcamcont()
+CameraController& Game::getcamcont()
 {
 	return camController;
 }

@@ -1,6 +1,3 @@
-#include <GL\glew.h>
-#include <GLFW/glfw3.h>
-
 #include <iostream>
 #include <fstream>
 #include <string>
@@ -23,56 +20,21 @@
 #include <input_handlers/MouseEventHandler.h>
 
 #include <View.h>
-#include "game.h"
+#include "Game.h"
 #include "Shader.h"
 
 #include "Settings.h"
 
-void GLAPIENTRY
-MessageCallback(GLenum source,
-    GLenum type,
-    GLuint id,
-    GLenum severity,
-    GLsizei length,
-    const GLchar* message,
-    const void* userParam)
-{
-    fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
-        (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-        type, severity, message);
-}
+
+//genTerrain TEST
+#include "Chunk/TerrainGenerator.h"
+
 
 int main(void)
 {
-    GLFWwindow* window;
-
-    /* Initialize the library */
-    if (!glfwInit())
-        return -1;
-
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
-    glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-
-    /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
-    if (!window)
-    {
-        glfwTerminate();
-        return -1;
-    }
-
-    /* Make the window's context current */
-    glfwMakeContextCurrent(window);
-
-    /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
-    glfwSwapInterval(1);           
-
-    if (glewInit() != GLEW_OK)
-        return -1;
-
-    glEnable(GL_DEBUG_OUTPUT);
-    glDebugMessageCallback(MessageCallback, 0);
+    
+    Renderer::initialize();
+    Game::initialize();
 
     {
         float positions[] = {
@@ -80,7 +42,7 @@ int main(void)
              0.5f, -0.5f,  0.0f, //1
              0.5f,  0.5f,  0.0f, //2
             -0.5f,  0.5f,  0.0f, //3
-                            
+
             -0.5f, -0.5f,  -1.0f, //4
              0.5f, -0.5f,  -1.0f, //5
              0.5f,  0.5f,  -1.0f, //6
@@ -109,7 +71,7 @@ int main(void)
 
         unsigned int vao;
         glGenVertexArrays(1, &vao);
-        glBindVertexArray(vao);  
+        glBindVertexArray(vao);
 
         VertexBuffer vb(positions, sizeof(positions));
 
@@ -122,52 +84,65 @@ int main(void)
         Shader shader("res/shaders/Basic.shader");
         shader.Bind();
 
-        game::initialize(window);
-
         shader.SetUniform4f("u_Color", 1.0f, 1.0f, 1.0f, 1.0f);
 
+        /// 
         int frameCount = 0;
         int lastTime = glfwGetTime();
+        ///
+
+        //std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT>* heapBlocks =
+        //    new std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT>;
+        //heapBlocks[0] = TerrainGenerator::generateTerrain(0, 0, 0);
+
+        //for (int i = 0; i <= 15; i++) {
+        //    std::cout << (int)heapBlocks->at(INDEX(i,0,0));
+        //}
+
+        std::vector<Chunk> chunks;
+        for(int i = 0; i < 21; i++)
+        {
+            for (int j = 0; j < 21; j++)
+                chunks.emplace_back(i, j, 0);
+		}
 
         /* Loop until the user closes the window */
-        while (!glfwWindowShouldClose(window))
+        while (!glfwWindowShouldClose(Renderer::getWindow()))
         {
-            frameCount++;
-            if(glfwGetTime() - lastTime >= 1.0f)
-            {
-                printf("%f ms/frame, %d fps\n",1000.0f / frameCount, frameCount);
-                frameCount = 0;
-                lastTime = glfwGetTime();
-			}
+                   
+            //Frame
+          //  frameCount++;
+          //  if (glfwGetTime() - lastTime >= 1.0f)
+          //  {
+          //      printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
+          //      frameCount = 0;
+          //      lastTime = glfwGetTime();
+          //  }
+            //////
 
             /* Render here */
             glClear(GL_COLOR_BUFFER_BIT);
 
-            game::run();
+            Game::run();
 
-            shader.SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix(game::getcamcont().getCamera())[0][0]);
-            shader.SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(45,4/3.0f)[0][0]);
+            shader.SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix(Game::getcamcont().getCamera())[0][0]);
+            shader.SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(45, 4 / 3.0f)[0][0]);
 
             glBindVertexArray(vao);
             ib.Bind();
 
             glm::mat4x4 ModelMatrix(1.0f);
             ModelMatrix = glm::scale(ModelMatrix, glm::vec3(0.1f, 0.1f, 0.1f));
-            shader.SetUniformMatrix4f("u_Model", 1, GL_FALSE,&ModelMatrix[0][0]);
+            shader.SetUniformMatrix4f("u_Model", 1, GL_FALSE, &ModelMatrix[0][0]);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
             ModelMatrix = glm::translate(ModelMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
-            shader.SetUniformMatrix4f("u_Model", 1, GL_FALSE,&ModelMatrix[0][0]);
+            shader.SetUniformMatrix4f("u_Model", 1, GL_FALSE, &ModelMatrix[0][0]);
             glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, nullptr);
 
-            /* Swap front and back buffers */
-            glfwSwapBuffers(window);
-
-            /* Poll for and process events */
-            glfwPollEvents();
+            Renderer::endFrame();
         }
-
     }
-    glfwTerminate();
+    Renderer::terminate();
     return 0;
 }

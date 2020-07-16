@@ -19,10 +19,14 @@
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\Game\Camera.cpp" />
     <ClCompile Include="src\Game\CameraController.cpp" />
-    <ClCompile Include="src\Game\game.cpp" />
     <ClCompile Include="src\Game\inputs.cpp" />
     <ClCompile Include="src\Render\Shader.cpp" />
     <ClCompile Include="src\Game\Settings.cpp" />
+    <ClCompile Include="src\Game\Game.cpp" />
+    <ClCompile Include="src\Game\Chunk\Chunk.cpp" />
+    <ClCompile Include="src\Game\Chunk\TerrainGenerator.cpp" />
+    <ClCompile Include="src\vendor\Mr.Noise\SimplexNoise.cpp" />
+    <ClCompile Include="src\Game\Chunk\ChunkManager.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -1306,9 +1310,6 @@
     <ClInclude Include="src\Game\CameraController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game\game.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Game\inputs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1328,6 +1329,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\Settings.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Gme.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Chunk\Chunk.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Game.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Chunk\TerrainGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\vendor\Mr.Noise\SimplexNoise.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Chunk\ChunkManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
