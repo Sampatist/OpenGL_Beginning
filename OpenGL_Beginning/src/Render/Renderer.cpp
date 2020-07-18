@@ -1,5 +1,7 @@
 #include "Renderer.h"
 #include <iostream>
+#include "Chunk/ChunkManager.h"
+#include "VertexBuffer.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -64,4 +66,14 @@ void Renderer::endFrame()
 void Renderer::terminate()
 {
     glfwTerminate();
+}
+
+std::vector<VertexBuffer> vbos;
+
+void Renderer::draw()
+{
+    for(const auto& mesh : ChunkManager::chunkMeshes)
+    {
+
+	}
 }

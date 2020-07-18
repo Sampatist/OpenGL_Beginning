@@ -105,7 +105,7 @@ int main(void)
             frameCount++;
             if (glfwGetTime() - lastTime >= 1.0f)
             {
-                //printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
+                printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
                 frameCount = 0;
                 lastTime = glfwGetTime();
                 ChunkManager::update();

@@ -3,7 +3,6 @@
 #include <iostream>
 
 #include <functional> 
-#define SEED "245136"
 
 //std::hash<std::string> TerrainHash;
 //int HashValue = TerrainHash(SEED);
@@ -15,9 +14,9 @@ constexpr float SCALE = 0.01;
 
 static SimplexNoise noise;
 
-std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> TerrainGenerator::generateTerrain(int x, int z, int y)
+std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> TerrainGenerator::generateTerrain(int x, int z, int y)
 {
-	std::array<char, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> blocks{ 0 };
+	std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> blocks{ 0 };
 
 	for (int i = 0; i < CHUNK_WIDTH; i++)
 	{

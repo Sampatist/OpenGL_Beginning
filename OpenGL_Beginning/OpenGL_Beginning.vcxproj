@@ -24,6 +24,7 @@
     <ClCompile Include="src\Game\CameraController.cpp" />
     <ClCompile Include="src\Game\Chunk\Chunk.cpp" />
     <ClCompile Include="src\Game\Chunk\ChunkManager.cpp" />
+    <ClCompile Include="src\Game\Chunk\MeshGenerator.cpp" />
     <ClCompile Include="src\Game\Chunk\TerrainGenerator.cpp" />
     <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\Game\inputs.cpp" />
@@ -181,6 +182,7 @@
     <ClInclude Include="src\Game\Chunk\Chunk.h" />
     <ClInclude Include="src\Game\Chunk\CHUNKARRAY.h" />
     <ClInclude Include="src\Game\Chunk\ChunkManager.h" />
+    <ClInclude Include="src\Game\Chunk\MeshGenerator.h" />
     <ClInclude Include="src\Game\Chunk\TerrainGenerator.h" />
     <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Game\Gme.h" />

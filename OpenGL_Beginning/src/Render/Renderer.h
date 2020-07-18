@@ -8,4 +8,5 @@ namespace Renderer
 	GLFWwindow* const getWindow();
 	void endFrame();
 	void terminate();
+	void draw();
 }
