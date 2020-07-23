@@ -21,7 +21,7 @@ struct hash_pair {
 	}
 };
 
-static std::vector<Chunk> loadedChunks;
+static std::deque<Chunk> loadedChunks;
 static std::unordered_map<std::pair<int, int>, Chunk*, hash_pair> loadedChunksMap;
 static int oldCamChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 static int oldCamChunkZ = (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
@@ -35,24 +35,22 @@ static bool isFar(int x, int z, int x2, int z2)
 	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
 }
 
-static std::mutex mutex;
-
 static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
 	//Unload Chunks O(n)
-	mutex.lock();
-	for(int i = loadedChunks.size() - 1; i >= 0; i--)
+	for (int i = loadedChunks.size() - 1; i >= 0; i--)
 	{
-		if(isFar(loadedChunks[i].getX(), loadedChunks[i].getZ(), cameraChunkX, cameraChunkZ))
+		if (isFar(loadedChunks[i].getX(), loadedChunks[i].getZ(), cameraChunkX, cameraChunkZ))
 		{
 			// unload chunk
 			//printf("unloaded chunk, x:%d z:%d y:%d\n", loadedChunks[i].getX(), loadedChunks[i].getZ(), loadedChunks[i].getY());
 			std::pair<int, int> chunkLocation(loadedChunks[i].getX(), loadedChunks[i].getZ());
 			loadedChunks[i].isMeshReady = false;
-			loadedChunks.erase(loadedChunks.begin() + i);
+			//loadedChunks.erase(loadedChunks.begin() + i);
 			loadedChunksMap.erase(chunkLocation);
 		}
 	}
+	loadedChunks.erase(std::remove_if(loadedChunks.begin(), loadedChunks.end(), [=](Chunk& chunk) { return isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ); }), loadedChunks.end());
 	//std::cout << std::this_thread::get_id() << " finished unload.\n";
 
 	//Load Chunks O(n)
@@ -115,17 +113,16 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 			loadedChunk.isMeshReady = true;
 		}
 	}
-	mutex.unlock();
 }
 
-static std::queue<std::future<void>> futures;
+static std::future<void> head;
+static std::pair<int, int> queued;
+static bool queueEmpty = true;
 
 void ChunkManager::start()
 {
-	chunkMeshes.reserve(5000);
-	futures.push(std::async(std::launch::async, reloadChunks, oldCamChunkX, oldCamChunkZ));
+	head = std::async(std::launch::async, reloadChunks, oldCamChunkX, oldCamChunkZ);
 }
-
 
 void ChunkManager::update()
 {
@@ -136,23 +133,15 @@ void ChunkManager::update()
 	{
 		oldCamChunkX = cameraChunkX;
 		oldCamChunkZ = cameraChunkZ;
-		printf("Reloading chunks.\n");
-		futures.push(std::async(std::launch::async, reloadChunks, cameraChunkX, cameraChunkZ));
+		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
+		printf("Adding queue.\n");
+		queueEmpty = false;
 	}
-	if (!futures.empty() && futures.front().wait_for(std::chrono::seconds(0)) == std::future_status::ready)
+	if(head.wait_for(std::chrono::seconds(0)) == std::future_status::ready && !queueEmpty)
 	{
-		futures.pop();
+		queueEmpty = true;
+		head = std::async(std::launch::async, reloadChunks, queued.first, queued.second);
 	}
-
-	printf("%d elements.\n", futures.size());
+	printf("Ready_status %d.\n", head.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
 	printf("%d loaded chunks.\n", loadedChunks.size());
 }
-
-/*
-{
-	for(auto chunkUpdate : updates)
-	{
-		chunkUpdate.do();
-	}
-}
-*/

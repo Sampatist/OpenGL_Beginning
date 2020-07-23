@@ -39,17 +39,16 @@ int main(void)
     while (!glfwWindowShouldClose(Renderer::getWindow()))
     {
         //Frame
-        frameCount++;
-        if (glfwGetTime() - lastTime >= 1.0f)
+        frameCount+=5;
+        if (glfwGetTime() - lastTime >= 0.2f)
         {
             printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
             frameCount = 0;
             lastTime = glfwGetTime();
 
             ChunkManager::update();
-
         }
-         //////
+        //////
 
         /* Render here */
 

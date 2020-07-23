@@ -135,7 +135,7 @@ void Renderer::bufferChunks()
             glBufferSubData(GL_ARRAY_BUFFER, 0, (*iter).bufferSize * sizeof(int32_t), arr);
             ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
             ChunkManager::meshLock.unlock();
-            if (++bufferOperations == 5)
+            if (++bufferOperations == 10)
                 break;
         }
 	}
