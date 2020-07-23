@@ -6,7 +6,7 @@
 #include "Settings.h"
 
 constexpr float ZNEAR = 0.1f;
-constexpr float ZFAR = 1320.0f;
+constexpr float ZFAR = 2000.0f;
 
 inline glm::mat4 ViewMatrix() {
 

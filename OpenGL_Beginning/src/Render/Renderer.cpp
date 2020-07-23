@@ -8,6 +8,7 @@
 #include "Shader.h"
 #include <View.h>
 #include "ShadersNamespace.h"
+#include "Chunk/CHUNKARRAY.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -68,12 +69,12 @@ void Renderer::initialize()
 
     int dummyChunkPos = cameraChunkX + Settings::viewDistance + 4;
 
-    for (int i = 0; i < 2109; i++)
+    for (int i = 0; i < chunkCountLookup[Settings::viewDistance]; i++)
     {
         drawableMeshes.emplace_back(0,0,dummyChunkPos,0);
         glGenBuffers(1, &drawableMeshes[i].vboID);
         glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-        glBufferData(GL_ARRAY_BUFFER, 786432, nullptr, GL_STATIC_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 786432, nullptr, GL_STREAM_DRAW);
     }
 
     glEnable(GL_DEPTH_TEST); 
@@ -113,32 +114,57 @@ bool isFar(int x, int z)
 	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
 }
 
+static int lastIndex = 0;
+
 void Renderer::bufferChunks()
 {
     int bufferOperations = 0;
-
-    for(auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
+    for(int i = lastIndex; i < drawableMeshes.size(); i++)
     {
-        if(isFar((*iter).chunkX, (*iter).chunkZ))
+        lastIndex = (lastIndex + 1) % drawableMeshes.size();
+        if (isFar(drawableMeshes[i].chunkX, drawableMeshes[i].chunkZ))
         {
             ChunkManager::meshLock.lock();
             if (ChunkManager::chunkMeshes.empty())
             {
                 ChunkManager::meshLock.unlock();
                 break;
-			}
-            (*iter).bufferSize = ChunkManager::chunkMeshes.front().mesh.size();
-            (*iter).chunkX = ChunkManager::chunkMeshes.front().x;
-            (*iter).chunkZ = ChunkManager::chunkMeshes.front().z;
+            }
+            drawableMeshes[i].bufferSize = ChunkManager::chunkMeshes.front().mesh.size();
+            drawableMeshes[i].chunkX = ChunkManager::chunkMeshes.front().x;
+            drawableMeshes[i].chunkZ = ChunkManager::chunkMeshes.front().z;
             int32_t* arr = &(ChunkManager::chunkMeshes.front().mesh[0]);
-            glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, (*iter).bufferSize * sizeof(int32_t), arr);
+            glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
+            glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
             ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
             ChunkManager::meshLock.unlock();
             if (++bufferOperations == 10)
                 break;
         }
 	}
+ 
+ //   for(auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
+ //   {
+ //       if(isFar((*iter).chunkX, (*iter).chunkZ))
+ //       {
+ //           ChunkManager::meshLock.lock();
+ //           if (ChunkManager::chunkMeshes.empty())
+ //           {
+ //               ChunkManager::meshLock.unlock();
+ //               break;
+	//		}
+ //           (*iter).bufferSize = ChunkManager::chunkMeshes.front().mesh.size();
+ //           (*iter).chunkX = ChunkManager::chunkMeshes.front().x;
+ //           (*iter).chunkZ = ChunkManager::chunkMeshes.front().z;
+ //           int32_t* arr = &(ChunkManager::chunkMeshes.front().mesh[0]);
+ //           glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
+ //           glBufferSubData(GL_ARRAY_BUFFER, 0, (*iter).bufferSize * sizeof(int32_t), arr);
+ //           ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+ //           ChunkManager::meshLock.unlock();
+ //           if (++bufferOperations == 10)
+ //               break;
+ //       }
+    //}
 }
 
 void Renderer::draw()
