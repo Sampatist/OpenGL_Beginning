@@ -34,6 +34,11 @@ void Shader::SetUniform4f(const std::string& name, float vx, float vy, float vz,
     glUniform4f(GetUniformLocation(name), vx, vy, vz, vw);
 }
 
+void Shader::SetUniform2i(const std::string& name, int vx, int vy)
+{
+    glUniform2i(GetUniformLocation(name), vx, vy);
+}
+
 void Shader::SetUniformMatrix4f(const std::string& name, int num, GLboolean transposed, const GLfloat* value)
 {
     glUniformMatrix4fv(GetUniformLocation(name), num, transposed, value);
@@ -90,7 +95,6 @@ unsigned int Shader::CompileShader(unsigned int type, const std::string& source)
             glDeleteShader(id);
             return 0;
         }
-
         return id;
 }
 

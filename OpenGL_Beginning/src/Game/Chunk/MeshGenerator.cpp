@@ -1,6 +1,7 @@
 #include <vector>
 #include "MeshGenerator.h"
 #include <iostream>
+#include <atomic>
 
 enum class FaceDirection
 {
@@ -18,7 +19,7 @@ static inline int32_t packData(int x, int z, int y, int8_t blockID, FaceDirectio
 	return x | (z << 4) | (y << 8) | (blockID << 16) | ((int)dir << 24) | ((int)dir << 27);
 }
 
-std::vector<int32_t> MeshGenerator::generateMesh(const Chunk& chunk)
+MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk)
 {
 	std::vector<int32_t> mesh;
 	for(int k = 1; k < CHUNK_HEIGHT - 1; k++)
@@ -30,45 +31,80 @@ std::vector<int32_t> MeshGenerator::generateMesh(const Chunk& chunk)
 				if(auto blockID = chunk.getBlock(i, j, k))
 				{
 					//posY
-					if(chunk.getBlock(i, j, k + 1))
+					if(!chunk.getBlock(i, j, k + 1))
 					{
 						int32_t arr[4] =
 						{
-							packData(0 + i, 1 + j, 0 + k, blockID, FaceDirection::posY, TexCoord::bottomLeft),
-							packData(1 + i, 1 + j, 0 + k, blockID, FaceDirection::posY, TexCoord::bottomRight),
-							packData(1 + i, 1 + j, 1 + k, blockID, FaceDirection::posY, TexCoord::topRight),
-							packData(0 + i, 1 + j, 1 + k, blockID, FaceDirection::posY, TexCoord::topLeft),
+							packData(0 + i, 1 + j, 1 + k, blockID, FaceDirection::posY, TexCoord::bottomLeft),
+							packData(1 + i, 1 + j, 1 + k, blockID, FaceDirection::posY, TexCoord::bottomRight),
+							packData(1 + i, 0 + j, 1 + k, blockID, FaceDirection::posY, TexCoord::topRight),
+							packData(0 + i, 0 + j, 1 + k, blockID, FaceDirection::posY, TexCoord::topLeft)
 						};
 						mesh.insert(mesh.end(), std::begin(arr), std::end(arr));
 					}
 					//negY									
-					if(chunk.getBlock(i, j, k - 1))
+					if(!chunk.getBlock(i, j, k - 1))
 					{
-
+						int32_t arr[4] =
+						{
+							packData(0 + i, 0 + j, 0 + k, blockID, FaceDirection::negY, TexCoord::bottomLeft),
+							packData(1 + i, 0 + j, 0 + k, blockID, FaceDirection::negY, TexCoord::bottomRight),
+							packData(1 + i, 1 + j, 0 + k, blockID, FaceDirection::negY, TexCoord::topRight),
+							packData(0 + i, 1 + j, 0 + k, blockID, FaceDirection::negY, TexCoord::topLeft)
+						};
+						mesh.insert(mesh.end(), std::begin(arr), std::end(arr));
 					}
 					//posZ
-					if(chunk.getBlock(i, j + 1, k))
+					if (!chunk.getBlock(i, j + 1, k))
 					{
-
+						int32_t arr[4] =
+						{
+							packData(0 + i, 1 + j, 0 + k, blockID, FaceDirection::posZ, TexCoord::bottomLeft),
+							packData(1 + i, 1 + j, 0 + k, blockID, FaceDirection::posZ, TexCoord::bottomRight),
+							packData(1 + i, 1 + j, 1 + k, blockID, FaceDirection::posZ, TexCoord::topRight),
+							packData(0 + i, 1 + j, 1 + k, blockID, FaceDirection::posZ, TexCoord::topLeft)
+						};
+						mesh.insert(mesh.end(), std::begin(arr), std::end(arr));
 					}
 					//negZ
-					if(chunk.getBlock(i, j - 1, k))
+					if(!chunk.getBlock(i, j - 1, k))
 					{
-
+						int32_t arr[4] =
+						{
+							packData(0 + i, 0 + j, 1 + k, blockID, FaceDirection::negZ, TexCoord::bottomLeft),
+							packData(1 + i, 0 + j, 1 + k, blockID, FaceDirection::negZ, TexCoord::bottomRight),
+							packData(1 + i, 0 + j, 0 + k, blockID, FaceDirection::negZ, TexCoord::topRight),
+							packData(0 + i, 0 + j, 0 + k, blockID, FaceDirection::negZ, TexCoord::topLeft)
+						};
+						mesh.insert(mesh.end(), std::begin(arr), std::end(arr));
 					}
 					//posX
-					if(chunk.getBlock(i + 1, j, k))
+					if(!chunk.getBlock(i + 1, j, k))
 					{
-
+						int32_t arr[4] =
+						{
+							packData(1 + i, 1 + j, 0 + k, blockID, FaceDirection::posX, TexCoord::bottomLeft),
+							packData(1 + i, 0 + j, 0 + k, blockID, FaceDirection::posX, TexCoord::bottomRight),
+							packData(1 + i, 0 + j, 1 + k, blockID, FaceDirection::posX, TexCoord::topRight),
+							packData(1 + i, 1 + j, 1 + k, blockID, FaceDirection::posX, TexCoord::topLeft)
+						};
+						mesh.insert(mesh.end(), std::begin(arr), std::end(arr));
 					}
 					//negX
-					if(chunk.getBlock(i - 1, j, k))
+					if(!chunk.getBlock(i - 1, j, k))
 					{
-
+						int32_t arr[4] =
+						{
+							packData(0 + i, 0 + j, 0 + k, blockID, FaceDirection::negX, TexCoord::bottomLeft),
+							packData(0 + i, 1 + j, 0 + k, blockID, FaceDirection::negX, TexCoord::bottomRight),
+							packData(0 + i, 1 + j, 1 + k, blockID, FaceDirection::negX, TexCoord::topRight),
+							packData(0 + i, 0 + j, 1 + k, blockID, FaceDirection::negX, TexCoord::topLeft)
+						};
+						mesh.insert(mesh.end(), std::begin(arr), std::end(arr));
 					}
 				}
 			}
 		}
 	}
-	return mesh;
+	return MeshGenerator::Mesh( chunk.getX(), chunk.getZ(), mesh );
 }

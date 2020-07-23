@@ -28,6 +28,7 @@
     <ClCompile Include="src\vendor\Mr.Noise\SimplexNoise.cpp" />
     <ClCompile Include="src\Game\Chunk\ChunkManager.cpp" />
     <ClCompile Include="src\Game\Chunk\MeshGenerator.cpp" />
+    <ClCompile Include="src\Render\ShadersNamespace.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -1354,6 +1355,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\Chunk\MeshGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\ShadersNamespace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

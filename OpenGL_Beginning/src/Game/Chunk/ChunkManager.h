@@ -1,9 +1,12 @@
 #pragma once
 #include <vector>
+#include "MeshGenerator.h"
+#include <mutex>
 
 namespace ChunkManager
 {
 	void start();
 	void update();
-	extern std::vector<std::vector<int32_t>> chunkMeshes;
+	inline std::vector<MeshGenerator::Mesh> chunkMeshes;
+	inline std::mutex meshLock;
 }

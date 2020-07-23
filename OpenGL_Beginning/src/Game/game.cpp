@@ -7,6 +7,7 @@
 void Game::initialize()
 {
 	Settings::readSettingsFile();
+	Renderer::initialize();
 	inputManager::initialize();
 	ChunkManager::start();
 }
@@ -14,18 +15,6 @@ void Game::initialize()
 void Game::run()
 {
 	CameraController::update();
-	//Renderer::draw();
+	Renderer::bufferChunks();
+	Renderer::draw();
 }
-/*
-void Renderer::draw()
-{
-	chunkShader.Bind();
-	std::vector<Chunk> chunks = ChunkManager::getChunks();
-	for(auto& chunk : chunks)
-	{
-		chunk.mesh.Bind();
-		glDrawElements(); 
-	}
-	ChunkManager::addChunkUpdate(x,z,y);
-}           
-*/

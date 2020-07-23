@@ -1,7 +1,7 @@
 #include "Camera.h"
 #include "glm/trigonometric.hpp"
 
-static	glm::vec3 Position(0.0f, 0.0f, 2.0f);
+static	glm::vec3 Position(0.0f, 150.0f, 2.0f);
 static	glm::vec3 CameraAngle(0.0f, 0.0f, -1.0f);
 static	glm::vec3 InitialAngle(0.0f, 0.0f, -1.0f);
 
