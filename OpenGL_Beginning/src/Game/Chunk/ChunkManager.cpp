@@ -7,24 +7,16 @@
 #include <iostream>
 #include "CHUNKARRAY.h"
 #include <future>
-#include <queue>
+#include <list>
 #include "MeshGenerator.h"
 #include <algorithm>
-
-struct hash_pair {
-	template <class T1, class T2>
-	size_t operator()(const std::pair<T1, T2>& p) const
-	{
-		auto hash1 = std::hash<T1>{}(p.first);
-		auto hash2 = std::hash<T2>{}(p.second);
-		return hash1 ^ hash2;
-	}
-};
+#include "pairHash.h"
 
 static std::deque<Chunk> loadedChunks;
 static std::unordered_map<std::pair<int, int>, Chunk*, hash_pair> loadedChunksMap;
 static int oldCamChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 static int oldCamChunkZ = (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
+static std::atomic<bool> terminateStatus = false;
 
 static bool isFar(int x, int z, int x2, int z2)
 {
@@ -38,20 +30,19 @@ static bool isFar(int x, int z, int x2, int z2)
 static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
 	//Unload Chunks O(n)
-	for (int i = loadedChunks.size() - 1; i >= 0; i--)
-	{
-		if (isFar(loadedChunks[i].getX(), loadedChunks[i].getZ(), cameraChunkX, cameraChunkZ))
-		{
-			// unload chunk
-			//printf("unloaded chunk, x:%d z:%d y:%d\n", loadedChunks[i].getX(), loadedChunks[i].getZ(), loadedChunks[i].getY());
-			std::pair<int, int> chunkLocation(loadedChunks[i].getX(), loadedChunks[i].getZ());
-			loadedChunks[i].isMeshReady = false;
-			//loadedChunks.erase(loadedChunks.begin() + i);
-			loadedChunksMap.erase(chunkLocation);
-		}
-	}
+    for(auto& chunk : loadedChunks){
+        if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
+        {
+            // unload chunk
+            //printf("unloaded chunk, x:%d z:%d y:%d\n", loadedChunks[i].getX(), loadedChunks[i].getZ(), loadedChunks[i].getY());
+            std::pair<int, int> chunkLocation(chunk.getX(), chunk.getZ());
+            chunk.isMeshReady = false;
+            //loadedChunks.erase(loadedChunks.begin() + i);
+            loadedChunksMap.erase(chunkLocation);
+        }
+    }
+
 	loadedChunks.erase(std::remove_if(loadedChunks.begin(), loadedChunks.end(), [=](Chunk& chunk) { return isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ); }), loadedChunks.end());
-	//std::cout << std::this_thread::get_id() << " finished unload.\n";
 
 	//Load Chunks O(n)
 	int chunkCount = 0;
@@ -61,59 +52,57 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	while (!isFar(chunkX, chunkZ, cameraChunkX, cameraChunkZ))
 	{
 		std::pair<int, int> chunkLocation(chunkX, chunkZ);
+		
+		assert(loadedChunksMap.at(chunkLocation)->getX() != chunkX || loadedChunksMap.at(chunkLocation)->getZ() != ChunkZ);
 
 		if(loadedChunksMap.count(chunkLocation) == 0)
 		{
 			// load chunk
 			loadedChunks.emplace_back(chunkX, chunkZ, 0);
 			loadedChunksMap[chunkLocation] = &loadedChunks.back();
+			//ERROR CHECK
+			if (loadedChunksMap[chunkLocation]->getX() != loadedChunks.back().getX() || loadedChunksMap[chunkLocation]->getZ() != loadedChunks.back().getZ()) {
+				std::cout << "Error: CREATING PROPER CHUNK MAP FAILED" << std::endl;
+				assert(0);
+			}
 			//printf("loaded chunk, x:%d z:%d y:%d\n", chunkX, chunkZ, 0);
 		}
 		chunkCount++;
 		chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
 		chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
 	}
-	//std::cout << std::this_thread::get_id() << " finished load.\n";
-
-	//MeshGeneration
-
-	//bool allDone = true;
-
-	//for(auto i = ChunkManager::chunkMeshes.begin(); i != ChunkManager::chunkMeshes.end(); i++)
-	//{
-	//	if(!(*i).done.load())
-	//	{
-	//		allDone = false;
-	//		break;
-	//	}
-	//}
-	//if(allDone)
-	//{
-	//	ChunkManager::chunkMeshes.clear();
-	//}
-
-	//if( std::all_of(ChunkManager::chunkMeshes.begin(), ChunkManager::chunkMeshes.end(), [](Mesh& mesh){return mesh.done.load();}) )
-	//{
-	//	ChunkManager::chunkMeshes.clear();
-	//}
 
 	//Create MESH
-	for(size_t i = 0; i < loadedChunks.size(); i++)
-	{
-		Chunk& loadedChunk = loadedChunks.at(i);
-		if (!loadedChunk.isMeshReady)
-		{
-			// emplace_back(MeshGenerator::generateMesh(loadedChunk))
-			// or
-			// push_back(MeshGenerator::generateMesh(loadedChunk))
-			MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(loadedChunk);
-			ChunkManager::meshLock.lock();
-			ChunkManager::chunkMeshes.push_back(mesh);
-			ChunkManager::meshLock.unlock();
-			loadedChunk.isMeshReady = true;
-		}
-	}
+    for(auto& chunk : loadedChunks){
+		// if(terminateStatus)
+		// {
+		// 	return;
+		// }
+        if (!chunk.isMeshReady)
+        {
+            MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunks, loadedChunksMap);
+            ChunkManager::meshLock.lock();
+            ChunkManager::chunkMeshes.push_back(mesh);
+            ChunkManager::meshLock.unlock();
+            chunk.isMeshReady = true;
+        }
+    }
 }
+
+/*
+struct blockUpdate
+{
+	int x, y, z;
+
+}
+
+static void issueBlockUpdate(blockUpdate)
+{
+	//modifty loaded chunk spesific block
+	//create mesh that can be accessible by buffer
+	
+}
+*/
 
 static std::future<void> head;
 static std::pair<int, int> queued;
@@ -136,10 +125,12 @@ void ChunkManager::update()
 		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
 		printf("Adding queue.\n");
 		queueEmpty = false;
+		terminateStatus = true;
 	}
 	if(head.wait_for(std::chrono::seconds(0)) == std::future_status::ready && !queueEmpty)
 	{
 		queueEmpty = true;
+		terminateStatus = false;
 		head = std::async(std::launch::async, reloadChunks, queued.first, queued.second);
 	}
 	printf("Ready_status %d.\n", head.wait_for(std::chrono::seconds(0)) == std::future_status::ready);

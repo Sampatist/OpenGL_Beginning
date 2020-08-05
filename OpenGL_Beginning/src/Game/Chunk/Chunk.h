@@ -4,7 +4,7 @@
 
 constexpr int CHUNK_WIDTH = 16;    //x
 constexpr int CHUNK_LENGTH = 16;   //z
-constexpr int CHUNK_HEIGHT = 256; //y
+constexpr int CHUNK_HEIGHT = 256;  //y
 
 class Chunk
 {

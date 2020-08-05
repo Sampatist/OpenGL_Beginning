@@ -29,7 +29,9 @@
 
 int main(void)
 {
-   Game::initialize();
+    //std::this_thread::sleep_for(std::chrono::seconds(10));
+
+    Game::initialize();
 
     /// 
     int frameCount = 0;
@@ -45,7 +47,6 @@ int main(void)
             printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
             frameCount = 0;
             lastTime = glfwGetTime();
-
             ChunkManager::update();
         }
         //////

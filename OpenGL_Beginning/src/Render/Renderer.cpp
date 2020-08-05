@@ -40,7 +40,7 @@ void Renderer::initialize()
     //glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
     /* Create a windowed mode window and its OpenGL context */
-    window = glfwCreateWindow(640, 480, "Hello World", NULL, NULL);
+    window = glfwCreateWindow(1600, 900, "Hello World", NULL, NULL);
     if (!window)
     {
         glfwTerminate();
@@ -51,6 +51,8 @@ void Renderer::initialize()
     glfwMakeContextCurrent(window);
 
     /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
+    
+    //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, , 1080, GLFW_DONT_CARE);
     glfwSwapInterval(1);           
 
     if (glewInit() != GLEW_OK)
@@ -74,9 +76,11 @@ void Renderer::initialize()
         drawableMeshes.emplace_back(0,0,dummyChunkPos,0);
         glGenBuffers(1, &drawableMeshes[i].vboID);
         glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-        glBufferData(GL_ARRAY_BUFFER, 786432, nullptr, GL_STREAM_DRAW);
+        glBufferData(GL_ARRAY_BUFFER, 40000, nullptr, GL_STREAM_DRAW);
     }
-
+    //Theoretical Limit: 786432
+    // More than enough!!!  40000
+    // 3D NOISE
     glEnable(GL_DEPTH_TEST); 
     glEnable(GL_CULL_FACE);
 
@@ -85,7 +89,7 @@ void Renderer::initialize()
     glm::mat4 ModelMatrix(1.0f);
 
     Shaders::getChunkShader()->Bind();
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(4 / 3.0f)[0][0]);
+    Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(16 / 9.0f)[0][0]);
     Shaders::getChunkShader()->SetUniformMatrix4f("u_Model", 1, GL_FALSE, &ModelMatrix[0][0]);
 }
 
@@ -111,14 +115,23 @@ bool isFar(int x, int z)
 {
 	int relativex = x - (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 	int relativez = z - (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
-	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
+	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 3) * (Settings::viewDistance + 3);
 }
 
 static int lastIndex = 0;
 
+/* Yama yapildi, Maybe we can make the cameraPosition static for every buffer. */
+
 void Renderer::bufferChunks()
 {
     int bufferOperations = 0;
+
+    /*
+    if (blockBreak_status) {
+        buffer(block);
+    }
+    else
+    */
     for(int i = lastIndex; i < drawableMeshes.size(); i++)
     {
         lastIndex = (lastIndex + 1) % drawableMeshes.size();
@@ -130,16 +143,26 @@ void Renderer::bufferChunks()
                 ChunkManager::meshLock.unlock();
                 break;
             }
-            drawableMeshes[i].bufferSize = ChunkManager::chunkMeshes.front().mesh.size();
-            drawableMeshes[i].chunkX = ChunkManager::chunkMeshes.front().x;
-            drawableMeshes[i].chunkZ = ChunkManager::chunkMeshes.front().z;
-            int32_t* arr = &(ChunkManager::chunkMeshes.front().mesh[0]);
-            glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-            glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
-            ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+            MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
+            // find_if uzun suruyo olabilir
+            // unordered map kullanilip O(1) lookupdan 
+            // yararlanilabilir...
+            if(std::find_if(drawableMeshes.begin(), drawableMeshes.end(), 
+                [&](RenderableMesh& rm) { return rm.chunkX == frontMesh.x && rm.chunkZ == frontMesh.z; }) != drawableMeshes.end()) {
+                ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+                std::cout << "Mesh exists, erasing mesh.\n";
+            }else{
+                drawableMeshes[i].bufferSize = frontMesh.mesh.size();
+                drawableMeshes[i].chunkX = frontMesh.x;
+                drawableMeshes[i].chunkZ = frontMesh.z;
+                int32_t* arr = &(frontMesh.mesh[0]);
+                glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
+                ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+            }
             ChunkManager::meshLock.unlock();
-            if (++bufferOperations == 10)
-                break;
+            //if (++bufferOperations == 100)
+            //    break;
         }
 	}
  
@@ -167,9 +190,14 @@ void Renderer::bufferChunks()
     //}
 }
 
+static float gameTime = 0;
+
 void Renderer::draw()
 {
+    glClearColor( 0.611f, 0.780f, 1.0f, 1.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    gameTime += 0.02;
+    Shaders::getChunkShader()->SetUniform1f("u_GameTime",gameTime);
     Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix()[0][0]);
     for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
     {

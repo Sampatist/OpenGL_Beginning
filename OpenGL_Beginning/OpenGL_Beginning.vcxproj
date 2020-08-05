@@ -184,6 +184,7 @@
     <ClInclude Include="src\Game\Chunk\CHUNKARRAY.h" />
     <ClInclude Include="src\Game\Chunk\ChunkManager.h" />
     <ClInclude Include="src\Game\Chunk\MeshGenerator.h" />
+    <ClInclude Include="src\Game\Chunk\pairHash.h" />
     <ClInclude Include="src\Game\Chunk\TerrainGenerator.h" />
     <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Game\Gme.h" />

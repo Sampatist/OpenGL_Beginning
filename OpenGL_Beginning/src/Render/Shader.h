@@ -22,6 +22,7 @@ public:
 	void Bind() const;
 	void Unbind() const;
 
+	void SetUniform1f(const std::string& name, float vx);
 	void SetUniform2i(const std::string& name, int vx, int vy);
 	void SetUniform4f(const std::string& name, float vx, float vy, float vz, float vw);
 	void SetUniformMatrix4f(const std::string& name, int num, GLboolean transposed, const GLfloat* value);

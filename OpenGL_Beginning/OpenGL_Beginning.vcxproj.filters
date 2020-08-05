@@ -1360,6 +1360,9 @@
     <ClInclude Include="src\Render\ShadersNamespace.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Game\Chunk\pairHash.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\settings.txt" />

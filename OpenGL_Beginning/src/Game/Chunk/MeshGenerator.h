@@ -3,6 +3,9 @@
 #include "Chunk.h"
 #include <atomic>
 #include <memory>
+#include "pairHash.h"
+#include <unordered_map>
+#include <deque>
 
 namespace MeshGenerator
 {
@@ -15,5 +18,5 @@ namespace MeshGenerator
 			: x(x), z(z), mesh(mesh)
 		{};
 	};
-	MeshGenerator::Mesh generateMesh(const Chunk& chunk);
+	MeshGenerator::Mesh generateMesh(const Chunk& chunk, std::deque<Chunk>& loadedChunks , const std::unordered_map<std::pair<int, int>, Chunk*, hash_pair>& loadedChunksMap);
 }
