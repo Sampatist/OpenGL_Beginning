@@ -91,6 +91,7 @@ void Renderer::initialize()
     Shaders::getChunkShader()->Bind();
     Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(16 / 9.0f)[0][0]);
     Shaders::getChunkShader()->SetUniformMatrix4f("u_Model", 1, GL_FALSE, &ModelMatrix[0][0]);
+    Shaders::getChunkShader()->SetUniform1f("u_ChunkDistance", Settings::viewDistance);
 }
 
 GLFWwindow* const Renderer::getWindow()
@@ -190,15 +191,20 @@ void Renderer::bufferChunks()
     //}
 }
 
-static float gameTime = 0;
+static float gameTime = -1;
 
 void Renderer::draw()
 {
     glClearColor( 0.611f, 0.780f, 1.0f, 1.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    gameTime += 0.02;
+    
+    gameTime += 0.001;
     Shaders::getChunkShader()->SetUniform1f("u_GameTime",gameTime);
+
     Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix()[0][0]);
+    auto camPos = Camera::GetPosition();
+    Shaders::getChunkShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
+
     for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
     {
         if ((*iter).bufferSize == 0)
