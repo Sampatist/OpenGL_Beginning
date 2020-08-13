@@ -189,6 +189,7 @@
     <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Game\Gme.h" />
     <ClInclude Include="src\Game\inputs.h" />
+    <ClInclude Include="src\PhysicsEngine\PhysicalObjects.h" />
     <ClInclude Include="src\Render\IndexBuffer.h" />
     <ClInclude Include="src\input_handlers\KeyboardEventHandler.h" />
     <ClInclude Include="src\input_handlers\MouseEventHandler.h" />

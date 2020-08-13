@@ -191,14 +191,14 @@ void Renderer::bufferChunks()
     //}
 }
 
-static float gameTime = -1;
+static float gameTime = 0.5;
 
 void Renderer::draw()
 {
     glClearColor( 0.611f, 0.780f, 1.0f, 1.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    gameTime += 0.001;
+    gameTime += 0.00001;
     Shaders::getChunkShader()->SetUniform1f("u_GameTime",gameTime);
 
     Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix()[0][0]);
