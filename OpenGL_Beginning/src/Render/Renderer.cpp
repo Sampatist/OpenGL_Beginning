@@ -24,10 +24,9 @@ MessageCallback(GLenum source,
         type, severity, message);
 }
 
-
-
 static GLFWwindow* window = nullptr;
 static std::vector<Renderer::RenderableMesh> drawableMeshes;
+static unsigned int chunkIndexBufferObject = 0;
 
 void Renderer::initialize()
 {
@@ -65,6 +64,23 @@ void Renderer::initialize()
     unsigned int vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
+
+    /*Initilaize IBO*/
+    glGenBuffers(1, &chunkIndexBufferObject);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
+    // calculate all indices for maximum possible polygons in a chunk.
+    unsigned int* indices = new unsigned int[1179648];
+    for (size_t i = 0; i < 196608; i++)
+    {
+        indices[0 + i * 6] = 0 + i * 4;
+        indices[1 + i * 6] = 1 + i * 4;
+        indices[2 + i * 6] = 2 + i * 4;
+        indices[3 + i * 6] = 2 + i * 4;
+        indices[4 + i * 6] = 3 + i * 4;
+        indices[5 + i * 6] = 0 + i * 4;
+    }
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, 1179648, indices, GL_STATIC_DRAW);
+    delete[] indices;
 
     /*Initilaize VBO's*/
     long cameraChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
@@ -211,9 +227,10 @@ void Renderer::draw()
             continue;
         Shaders::getChunkShader()->SetUniform2i("u_ChunkOffset", (*iter).chunkX * CHUNK_WIDTH, (*iter).chunkZ * CHUNK_LENGTH);
         glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
         glVertexAttribIPointer(0, 1, GL_INT, sizeof(int), 0);
-        glDrawArrays(GL_QUADS, 0, (*iter).bufferSize);
+        glDrawElements(GL_TRIANGLES, (*iter).bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
     }
 }
 
