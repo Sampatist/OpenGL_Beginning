@@ -9,6 +9,8 @@
 #include <View.h>
 #include "ShadersNamespace.h"
 #include "Chunk/CHUNKARRAY.h"
+#include "Shadows.h"
+#include "Game.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -27,6 +29,7 @@ MessageCallback(GLenum source,
 static GLFWwindow* window = nullptr;
 static std::vector<Renderer::RenderableMesh> drawableMeshes;
 static unsigned int chunkIndexBufferObject = 0;
+static unsigned int sunShadowMapFramebuffer = 0;
 
 void Renderer::initialize()
 {
@@ -105,9 +108,41 @@ void Renderer::initialize()
     glm::mat4 ModelMatrix(1.0f);
 
     Shaders::getChunkShader()->Bind();
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(16 / 9.0f)[0][0]);
+    Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(Settings::aspectRatio)[0][0]);
     Shaders::getChunkShader()->SetUniformMatrix4f("u_Model", 1, GL_FALSE, &ModelMatrix[0][0]);
     Shaders::getChunkShader()->SetUniform1f("u_ChunkDistance", Settings::viewDistance);
+
+    /*Create sun shadow map frame buffer and texture*/
+
+    // The framebuffer, which regroups 0, 1, or more textures, and 0 or 1 depth buffer.
+
+    glGenFramebuffers(1, &sunShadowMapFramebuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
+
+    // The texture we're going to render to
+    GLuint sunShadowMapTexture;
+    glGenTextures(1, &sunShadowMapTexture);
+
+    // "Bind" the newly created texture : all future texture functions will modify this texture
+    glBindTexture(GL_TEXTURE_2D, sunShadowMapTexture);
+
+    // Give an empty image to OpenGL ( the last "0" )
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 3840, 2160, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+
+    // Specify texture parameters
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowMapTexture, 0);
+    glDrawBuffer(GL_NONE);
+    glReadBuffer(GL_NONE);
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, sunShadowMapTexture);
+
+    Shaders::getChunkShader()->SetUniform1i("u_SunShadowTexture", 0);
 }
 
 GLFWwindow* const Renderer::getWindow()
@@ -207,19 +242,45 @@ void Renderer::bufferChunks()
     //}
 }
 
-static float gameTime = 0.5;
-
 void Renderer::draw()
 {
     glClearColor( 0.611f, 0.780f, 1.0f, 1.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
-    gameTime += 0.00001;
-    Shaders::getChunkShader()->SetUniform1f("u_GameTime",gameTime);
+    glm::vec3 lightDir = Sun::GetDirection();
+    Shaders::getChunkShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
 
     Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix()[0][0]);
     auto camPos = Camera::GetPosition();
     Shaders::getChunkShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
+
+    Shaders::getSunShadowMapShader()->Bind();
+    glm::mat4 svpm = Shadows::calculateSunVPMatrix();
+    Shaders::getSunShadowMapShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
+    
+    // Render to shadow map frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
+    glViewport(0, 0, 3840, 2160);
+    glClear(GL_DEPTH_BUFFER_BIT);
+
+    for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
+    {
+        if ((*iter).bufferSize == 0)
+            continue;
+        Shaders::getSunShadowMapShader()->SetUniform2i("u_ChunkOffset", (*iter).chunkX * CHUNK_WIDTH, (*iter).chunkZ * CHUNK_LENGTH);
+        glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
+        glEnableVertexAttribArray(0);
+        glVertexAttribIPointer(0, 1, GL_INT, sizeof(int), 0);
+        glDrawElements(GL_TRIANGLES, (*iter).bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
+    }     
+       
+    Shaders::getChunkShader()->Bind();
+    Shaders::getChunkShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
+    // Render to the screen
+
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, 1600, 900);
 
     for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
     {

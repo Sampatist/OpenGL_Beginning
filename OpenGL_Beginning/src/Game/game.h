@@ -7,4 +7,5 @@ namespace Game
 {
 	void initialize();
 	void run();
+	const float getGameTime();
 }

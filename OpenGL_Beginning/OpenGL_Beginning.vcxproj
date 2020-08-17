@@ -35,11 +35,13 @@
     <ClCompile Include="src\Render\Renderer.cpp" />
     <ClCompile Include="src\Render\Shader.cpp" />
     <ClCompile Include="src\Render\ShadersNamespace.cpp" />
+    <ClCompile Include="src\Render\Shadows.cpp" />
     <ClCompile Include="src\Render\VertexBuffer.cpp" />
     <ClCompile Include="src\vendor\Mr.Noise\SimplexNoise.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
+    <None Include="res\shaders\SunShadowMap.shader" />
     <None Include="src\vendor\glm\detail\func_common.inl" />
     <None Include="src\vendor\glm\detail\func_common_simd.inl" />
     <None Include="src\vendor\glm\detail\func_exponential.inl" />
@@ -196,12 +198,9 @@
     <ClInclude Include="src\Render\Renderer.h" />
     <ClInclude Include="src\Render\Shader.h" />
     <ClInclude Include="src\Render\ShadersNamespace.h" />
+    <ClInclude Include="src\Render\Shadows.h" />
     <ClInclude Include="src\Render\View.h" />
-    <ClInclude Include="src\Settings\CamearaControllersettings.h" />
-    <ClInclude Include="src\Settings\fov.h" />
-    <ClInclude Include="src\Settings\FrameLimit.h" />
     <ClInclude Include="src\Game\Settings.h" />
-    <ClInclude Include="src\Settings\InputsList.h" />
     <ClInclude Include="src\vendor\glm\common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_common.hpp" />
     <ClInclude Include="src\vendor\glm\detail\compute_vector_relational.hpp" />

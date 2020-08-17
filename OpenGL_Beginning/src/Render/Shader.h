@@ -24,6 +24,7 @@ public:
 
 	void SetUniform1f(const std::string& name, float vx);
 	void SetUniform3f(const std::string& name, float vx, float vy, float vz);
+	void SetUniform1i(const std::string& name, int vx);
 	void SetUniform2i(const std::string& name, int vx, int vy);
 	void SetUniform4f(const std::string& name, float vx, float vy, float vz, float vw);
 	void SetUniformMatrix4f(const std::string& name, int num, GLboolean transposed, const GLfloat* value);

@@ -17,6 +17,11 @@ namespace Settings
 
 	extern int viewDistance;
 
+	//Unchangeable Settings
+	extern float aspectRatio;
+	extern float ZNEAR;
+	extern float ZFAR;
+	
 	// beyanlar
 	void readSettingsFile();
 	void writeToSettingsFile();

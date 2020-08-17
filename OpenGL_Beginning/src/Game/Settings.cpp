@@ -22,6 +22,11 @@ int Settings::down    = 0;
 //Game
 int Settings::viewDistance = 0;
 
+//Unchangeable settings
+float Settings::aspectRatio = 16.0f / 9.0f;
+float Settings::ZNEAR = 0.1f;
+float Settings::ZFAR = 1500.0f;
+
 //Map
 std::unordered_map<std::string, int> settingsMap =
 {

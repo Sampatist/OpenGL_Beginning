@@ -29,6 +29,7 @@
     <ClCompile Include="src\Game\Chunk\ChunkManager.cpp" />
     <ClCompile Include="src\Game\Chunk\MeshGenerator.cpp" />
     <ClCompile Include="src\Render\ShadersNamespace.cpp" />
+    <ClCompile Include="src\Render\Shadows.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -440,6 +441,7 @@
     <None Include="src\vendor\glm\gtx\wrap.inl">
       <Filter>Header Files</Filter>
     </None>
+    <None Include="res\shaders\SunShadowMap.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vendor\glm\detail\_features.hpp">
@@ -1315,19 +1317,7 @@
     <ClInclude Include="src\Game\inputs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Settings\CamearaControllersettings.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Settings\fov.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Settings\InputsList.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Render\Shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="src\Settings\FrameLimit.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Game\Settings.h">
@@ -1364,6 +1354,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\PhysicsEngine\PhysicalObjects.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Render\Shadows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

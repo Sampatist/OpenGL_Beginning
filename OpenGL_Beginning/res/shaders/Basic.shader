@@ -5,12 +5,14 @@ layout(location = 0) in int data;
 
 out vec3 normal;
 out vec3 camDir;
+out vec4 fragPosSunViewSpace;
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
 uniform mat4 u_Projection;
 uniform ivec2 u_ChunkOffset;
 uniform vec3 u_CamPos;
+uniform mat4 u_SunViewProjectionMatrix;
 
 const vec3 NORMALS[6] = vec3[6](
 	vec3(-0.7f,0.0f,0.0f),
@@ -30,7 +32,8 @@ void main()
 	normal = NORMALS[normalIndex];
 	vec3 position = vec3(x, y, z);
 	camDir = u_CamPos - position;
-	gl_Position =  u_Projection * u_View * u_Model * vec4(position.xyz, 1.0f);
+	fragPosSunViewSpace = u_SunViewProjectionMatrix * vec4(position.xyz, 1.0f);
+	gl_Position =  u_Projection * u_View * vec4(position.xyz, 1.0f);
 };
 
 #shader fragment
@@ -38,18 +41,45 @@ void main()
 
 in vec3 normal;
 in vec3 camDir;
+in vec4 fragPosSunViewSpace;
+
 layout(location = 0) out vec4 color;
 
 const float minAmbientValue = 0.10;
 const float maxAmbientValue = 0.15;
 const float diffuseStrenght = 0.7;
 const float global_illuminationStrenght = 0.1;
-const float specularStrength = 1f;
+const float specularStrength = 10.0f;
 const float fogCoefficient = 7.0f / 3.0f;
 const float MaxFog = 1;
 
-uniform float u_GameTime;
+uniform vec3 u_lightDir;
 uniform float u_ChunkDistance;
+uniform sampler2D u_SunShadowTexture;
+
+float calcShadow(float dotLightNormal)
+{
+	vec3 pos = fragPosSunViewSpace.xyz * 0.5f + 0.5f;
+
+	if(pos.x < 0 || pos.x > 1 || pos.y < 0 || pos.y > 1)
+	{
+		return 1;
+	}
+
+    float bias = max(0.0002f * (1.0f - dotLightNormal), 0.00018f);
+    
+	float shadow = 0.0f;
+    vec2 texelSize = 1.0f / textureSize(renderedTexture, 0);
+    for (int x = -1; x <= 1; x++)
+    {
+        for (int y = -1; y <= 1; y++)
+        {
+            float depth = texture(renderedTexture, pos.xy + vec2(x, y) * texelSize).r;
+            shadow += depth + bias < pos.z ? 0.0f : 1.0f;
+        }
+    }
+    return shadow / 9.0f;
+}
 
 float fogDiv = u_ChunkDistance * fogCoefficient;
 
@@ -67,8 +97,8 @@ void main()
 	vec3 sunColor = vec3(0.8, 0.8, 0.0);
 	vec3 moonLightColor = vec3(0.02, 0.02, 0.07);
 
-	vec3 lightDir = normalize(vec3(sin(u_GameTime),cos(u_GameTime),sin(u_GameTime)*0.4));
-	vec3 moonLightDir = -lightDir;
+	vec3 lightDir = u_lightDir;
+	vec3 moonLightDir = -u_lightDir;
 
 	float sunsetEffect = max(sin(lightDir.y * 1.6f), 0);
 	float moonEffect = max(sin(moonLightDir.y * 1.6f), 0);
@@ -86,9 +116,11 @@ void main()
 	float sunSpec     = pow(max(dot(normalize(normal), normalize(lightDir + normalize(camDir))), 0), 360);
 	float moonSpec    = pow(max(dot(normalize(normal), normalize(moonLightDir + normalize(camDir))), 0), 360);
 	//max prevents from having infinitly high specs.. also lets you have a standard spec image while on contact with the ground//
-	vec3 specular     = CurrentLight * (specularStrength / max(length(camDir), 10)) * (sunSpec + moonSpec);
+	vec3 specular     = CurrentLight * (specularStrength / max(length(camDir), 10)) * (sunSpec);
 	 
-	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse) + specular;
+	float shadow = calcShadow(dot(normal, lightDir));
+	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse * shadow) + specular * shadow;
 	vec3 foggedColor = applyFog(originalColor, length(camDir));
+
 	color = vec4(foggedColor, 1.0f);
 };
