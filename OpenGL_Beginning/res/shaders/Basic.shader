@@ -17,8 +17,8 @@ uniform mat4 u_SunViewProjectionMatrix;
 const vec3 NORMALS[6] = vec3[6](
 	vec3(-0.7f,0.0f,0.0f),
 	vec3(0.7f,0.0f,0.0f),
-	vec3(0.0f,0.0f,-0.6f),
-	vec3(0.0f,0.0f, 0.6f),
+	vec3(0.0f,0.0f,-0.75f),
+	vec3(0.0f,0.0f, 0.75f),
 	vec3(0.0f,-0.8f,0.0f),
 	vec3(0.0f,0.8f,0.0f)
 );
@@ -47,15 +47,15 @@ layout(location = 0) out vec4 color;
 
 const float minAmbientValue = 0.10;
 const float maxAmbientValue = 0.15;
-const float diffuseStrenght = 0.7;
-const float global_illuminationStrenght = 0.1;
-const float specularStrength = 10.0f;
+const float diffuseStrenght = 0.5;
+const float global_illuminationStrenght = 0.3;
+const float specularStrengthCoef = 10.0f;
 const float fogCoefficient = 7.0f / 3.0f;
 const float MaxFog = 1;
 
 uniform vec3 u_lightDir;
 uniform float u_ChunkDistance;
-uniform sampler2D u_SunShadowTexture;
+uniform sampler2DShadow u_SunShadowTexture;
 
 float calcShadow(float dotLightNormal)
 {
@@ -66,18 +66,20 @@ float calcShadow(float dotLightNormal)
 		return 1;
 	}
 
-    float bias = max(0.0002f * (1.0f - dotLightNormal), 0.00018f);
+	float bias = 0.00005 * tan(acos(dotLightNormal));
+	bias = max(min(bias, 0.0005), 0.000005);
+
+    vec2 texelSize = 1.0f / textureSize(u_SunShadowTexture, 0);
     
-	float shadow = 0.0f;
-    vec2 texelSize = 1.0f / textureSize(renderedTexture, 0);
-    for (int x = -1; x <= 1; x++)
+	float shadow = 0;
+	for (int x = -1; x <= 1; x++)
     {
         for (int y = -1; y <= 1; y++)
         {
-            float depth = texture(renderedTexture, pos.xy + vec2(x, y) * texelSize).r;
-            shadow += depth + bias < pos.z ? 0.0f : 1.0f;
+            shadow += texture(u_SunShadowTexture, vec3(pos.xy + vec2(x, y) * texelSize, pos.z - bias));
         }
     }
+
     return shadow / 9.0f;
 }
 
@@ -93,9 +95,9 @@ vec3 applyFog( vec3  rgb,       // original color of the pixel
 
 void main()
 {
-	vec3 baseColor = vec3(0.2, 0.7, 0.05);
-	vec3 sunColor = vec3(0.8, 0.8, 0.0);
-	vec3 moonLightColor = vec3(0.02, 0.02, 0.07);
+	vec3 baseColor = vec3(0.36, 0.88, 0.34);
+	vec3 sunColor = vec3(1.0, 1.0, 0.75);
+	vec3 moonLightColor = vec3(0.006, 0.02, 0.07);
 
 	vec3 lightDir = u_lightDir;
 	vec3 moonLightDir = -u_lightDir;
@@ -109,17 +111,30 @@ void main()
 	vec3 ambient = max(maxAmbientValue * CurrentLight * length(normal), minAmbientValue * baseColor * length(normal));
 	vec3 global_illumination = CurrentLight * global_illuminationStrenght;
 	
-	float sunDiff = max(dot(normal, lightDir), 0);
-	float moonDiff = max(dot(normal, moonLightDir), 0);
-	vec3 diffuse = diffuseStrenght * (sunDiff + moonDiff) * CurrentLight;
+	float sunShadow = calcShadow(dot(normalize(normal), lightDir));
+	
+	vec3 diffuse;
+	vec3 specular;
+	float specularStrenght = (specularStrengthCoef / max(length(camDir), 10));
 
-	float sunSpec     = pow(max(dot(normalize(normal), normalize(lightDir + normalize(camDir))), 0), 360);
-	float moonSpec    = pow(max(dot(normalize(normal), normalize(moonLightDir + normalize(camDir))), 0), 360);
-	//max prevents from having infinitly high specs.. also lets you have a standard spec image while on contact with the ground//
-	vec3 specular     = CurrentLight * (specularStrength / max(length(camDir), 10)) * (sunSpec);
-	 
-	float shadow = calcShadow(dot(normal, lightDir));
-	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse * shadow) + specular * shadow;
+	if (bool(sunsetEffect)) 
+	{
+		float sunDiff = max(dot(normal, lightDir), 0) * sunShadow;
+		diffuse = diffuseStrenght * sunDiff * CurrentLight;
+	
+		float sunSpec = pow(max(dot(normalize(normal), normalize(lightDir + normalize(camDir))), 0), 360) * sunShadow;
+		specular = specularStrenght * sunSpec * CurrentLight;
+	}
+	else
+	{
+		float moonDiff = max(dot(normal, moonLightDir), 0);
+		diffuse = diffuseStrenght * moonDiff * CurrentLight;
+	
+		float moonSpec    = pow(max(dot(normalize(normal), normalize(moonLightDir + normalize(camDir))), 0), 360);
+		specular = specularStrenght * moonSpec * CurrentLight;
+	}
+	
+	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse) + specular;
 	vec3 foggedColor = applyFog(originalColor, length(camDir));
 
 	color = vec4(foggedColor, 1.0f);

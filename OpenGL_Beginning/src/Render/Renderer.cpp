@@ -92,10 +92,11 @@ void Renderer::initialize()
 
     for (int i = 0; i < chunkCountLookup[Settings::viewDistance]; i++)
     {
-        drawableMeshes.emplace_back(0,0,dummyChunkPos,0);
+        drawableMeshes.emplace_back(dummyChunkPos,0);
         glGenBuffers(1, &drawableMeshes[i].vboID);
         glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-        glBufferData(GL_ARRAY_BUFFER, 40000, nullptr, GL_STREAM_DRAW);
+        drawableMeshes[i].capacity = 10000;
+        glBufferData(GL_ARRAY_BUFFER, drawableMeshes[i].capacity, nullptr, GL_STREAM_DRAW);
     }
     //Theoretical Limit: 786432
     // More than enough!!!  40000
@@ -127,13 +128,15 @@ void Renderer::initialize()
     glBindTexture(GL_TEXTURE_2D, sunShadowMapTexture);
 
     // Give an empty image to OpenGL ( the last "0" )
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 3840, 2160, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
 
     // Specify texture parameters
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
     glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowMapTexture, 0);
     glDrawBuffer(GL_NONE);
@@ -184,6 +187,7 @@ void Renderer::bufferChunks()
     }
     else
     */
+    
     for(int i = lastIndex; i < drawableMeshes.size(); i++)
     {
         lastIndex = (lastIndex + 1) % drawableMeshes.size();
@@ -203,13 +207,32 @@ void Renderer::bufferChunks()
                 [&](RenderableMesh& rm) { return rm.chunkX == frontMesh.x && rm.chunkZ == frontMesh.z; }) != drawableMeshes.end()) {
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
                 std::cout << "Mesh exists, erasing mesh.\n";
-            }else{
+            }
+            else{
                 drawableMeshes[i].bufferSize = frontMesh.mesh.size();
                 drawableMeshes[i].chunkX = frontMesh.x;
                 drawableMeshes[i].chunkZ = frontMesh.z;
                 int32_t* arr = &(frontMesh.mesh[0]);
-                glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-                glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
+                int bufferSizeBytes = drawableMeshes[i].bufferSize * 4;
+                // do this
+                if(glm::abs(drawableMeshes[i].capacity - 5000 - bufferSizeBytes) > 5000)          
+                {
+                    unsigned int tempVboID = 0;
+                    int extraCapacity = int(bufferSizeBytes - drawableMeshes[i].capacity) / 10000 + (drawableMeshes[i].capacity < bufferSizeBytes);
+                    //printf("%d %d %d\n", drawableMeshes[i].capacity, bufferSizeBytes, extraCapacity);
+                    drawableMeshes[i].capacity += 10000 * extraCapacity;
+                    glGenBuffers(1, &tempVboID);
+                    glBindBuffer(GL_ARRAY_BUFFER, tempVboID);
+                    glBufferData(GL_ARRAY_BUFFER, drawableMeshes[i].capacity, nullptr, GL_STREAM_DRAW);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
+                    glDeleteBuffers(1, &drawableMeshes[i].vboID);
+                    drawableMeshes[i].vboID = tempVboID;
+				}
+                else
+                {
+                    glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
+				}
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
             }
             ChunkManager::meshLock.unlock();
@@ -217,29 +240,6 @@ void Renderer::bufferChunks()
             //    break;
         }
 	}
- 
- //   for(auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
- //   {
- //       if(isFar((*iter).chunkX, (*iter).chunkZ))
- //       {
- //           ChunkManager::meshLock.lock();
- //           if (ChunkManager::chunkMeshes.empty())
- //           {
- //               ChunkManager::meshLock.unlock();
- //               break;
-	//		}
- //           (*iter).bufferSize = ChunkManager::chunkMeshes.front().mesh.size();
- //           (*iter).chunkX = ChunkManager::chunkMeshes.front().x;
- //           (*iter).chunkZ = ChunkManager::chunkMeshes.front().z;
- //           int32_t* arr = &(ChunkManager::chunkMeshes.front().mesh[0]);
- //           glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
- //           glBufferSubData(GL_ARRAY_BUFFER, 0, (*iter).bufferSize * sizeof(int32_t), arr);
- //           ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
- //           ChunkManager::meshLock.unlock();
- //           if (++bufferOperations == 10)
- //               break;
- //       }
-    //}
 }
 
 void Renderer::draw()
@@ -247,6 +247,8 @@ void Renderer::draw()
     glClearColor( 0.611f, 0.780f, 1.0f, 1.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
+    //Render Sun
+    Sun::SetDirection(Game::getGameTime());
     glm::vec3 lightDir = Sun::GetDirection();
     Shaders::getChunkShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
 
@@ -260,7 +262,7 @@ void Renderer::draw()
     
     // Render to shadow map frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
-    glViewport(0, 0, 3840, 2160);
+    glViewport(0, 0, 4096, 4096);
     glClear(GL_DEPTH_BUFFER_BIT);
 
     for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)

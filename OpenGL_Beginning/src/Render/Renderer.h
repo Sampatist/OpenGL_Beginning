@@ -8,10 +8,11 @@ namespace Renderer
 	{
 		unsigned int vboID;
 		unsigned int bufferSize;
+		unsigned int capacity;
 		int chunkX;
 		int chunkZ;
-		RenderableMesh(unsigned int vboID, unsigned int bufferSize, int chunkX, int chunkZ)
-			:vboID(vboID), bufferSize(bufferSize), chunkX(chunkX), chunkZ(chunkZ)
+		RenderableMesh(int chunkX, int chunkZ)
+			:vboID(0), bufferSize(0), capacity(0), chunkX(chunkX), chunkZ(chunkZ)
 		{};
 	};
 	void initialize();

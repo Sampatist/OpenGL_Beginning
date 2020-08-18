@@ -10,7 +10,7 @@
 namespace Sun
 {
     glm::vec3 GetDirection();
-    glm::vec3 SetDirection(glm::vec3 dir);
+    void SetDirection(float time);
 }
 
 namespace Shadows
