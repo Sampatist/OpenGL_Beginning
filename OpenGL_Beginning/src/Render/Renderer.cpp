@@ -30,6 +30,7 @@ static GLFWwindow* window = nullptr;
 static std::vector<Renderer::RenderableMesh> drawableMeshes;
 static unsigned int chunkIndexBufferObject = 0;
 static unsigned int sunShadowMapFramebuffer = 0;
+static unsigned int backgroundQuadBufferObject = 0;
 
 void Renderer::initialize()
 {
@@ -85,6 +86,20 @@ void Renderer::initialize()
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, 1179648, indices, GL_STATIC_DRAW);
     delete[] indices;
 
+    /*Initialize background VBO*/
+    glGenBuffers(1, &backgroundQuadBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
+    int backgroundVertex[18] =
+    {
+        -1,-1,0,
+        1,-1,0,
+        1,1,0,
+        1,1,0,
+        -1,1,0,
+        -1,-1,0
+    };
+    glBufferData(GL_ARRAY_BUFFER, sizeof(backgroundVertex), backgroundVertex, GL_STATIC_DRAW);
+
     /*Initilaize VBO's*/
     long cameraChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 
@@ -101,13 +116,15 @@ void Renderer::initialize()
     //Theoretical Limit: 786432
     // More than enough!!!  40000
     // 3D NOISE
-    glEnable(GL_DEPTH_TEST); 
+
     glEnable(GL_CULL_FACE);
 
     Shaders::initialize();
 
     glm::mat4 ModelMatrix(1.0f);
 
+    Shaders::getBackgroundQuadShader()->Bind();
+    Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_projMatrix", 1, GL_FALSE, &ProjectionMatrix(Settings::aspectRatio)[0][0]);
     Shaders::getChunkShader()->Bind();
     Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &ProjectionMatrix(Settings::aspectRatio)[0][0]);
     Shaders::getChunkShader()->SetUniformMatrix4f("u_Model", 1, GL_FALSE, &ModelMatrix[0][0]);
@@ -244,7 +261,6 @@ void Renderer::bufferChunks()
 
 void Renderer::draw()
 {
-    glClearColor( 0.611f, 0.780f, 1.0f, 1.0f );
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     //Render Sun
@@ -260,10 +276,24 @@ void Renderer::draw()
     glm::mat4 svpm = Shadows::calculateSunVPMatrix();
     Shaders::getSunShadowMapShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
     
+    // Render background quad
+    Shaders::getBackgroundQuadShader()->Bind();
+    auto camDir = Camera::GetCameraAngle();
+    Shaders::getBackgroundQuadShader()->SetUniform3f("u_CamDir", camDir.x, camDir.y, camDir.z);
+    Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &ViewMatrix()[0][0]);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glViewport(0, 0, 1600, 900);
+    glDisable(GL_DEPTH_TEST);
+    glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
     // Render to shadow map frame buffer
     glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
     glViewport(0, 0, 4096, 4096);
     glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
 
     for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
     {

@@ -442,7 +442,7 @@
       <Filter>Header Files</Filter>
     </None>
     <None Include="res\shaders\SunShadowMap.shader" />
-    <None Include="res\shaders\Sky.shader" />
+    <None Include="res\shaders\BackgroundQuad.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vendor\glm\detail\_features.hpp">
