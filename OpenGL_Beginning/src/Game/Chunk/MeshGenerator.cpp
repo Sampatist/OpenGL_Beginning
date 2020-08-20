@@ -21,7 +21,7 @@ static inline int32_t packData(int x, int z, int y, int8_t blockID, FaceDirectio
 	return x | (z << 5) | (y << 10) | (blockID << 19) | ((int)dir << 27) | ((int)dir << 30);
 }
 
-MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::deque<Chunk>& loadedChunks , const std::unordered_map<std::pair<int, int>, Chunk*, hash_pair>& loadedChunksMap)
+MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, Chunk, hash_pair>& loadedChunksMap)
 {
 	std::pair<int, int> posXpair(chunk.getX() + 1, chunk.getZ());
 	std::pair<int, int> negXpair(chunk.getX() - 1, chunk.getZ());
@@ -32,20 +32,10 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::deque<C
 	Chunk* posZChunk = nullptr;
 	Chunk* negZChunk = nullptr;
 
-	const auto chunkExists = [&](const Chunk& other, int x, int z)
-	{
-		return other.getX() == chunk.getX() + x &&
-			other.getZ() == chunk.getZ() + z;
-	};
-	
 	//posX
 	if (loadedChunksMap.count(posXpair))
 	{
-		auto it = std::find_if(loadedChunks.begin(), loadedChunks.end(), [&](const Chunk& other){return chunkExists(other, 1, 0);});
-		if (it != loadedChunks.end()) 
-		{
-			posXChunk = &(*it);
-		}
+		posXChunk = &loadedChunksMap.at(posXpair);
 	}										    
 	else
 	{
@@ -55,11 +45,7 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::deque<C
 	//negX
 	if (loadedChunksMap.count(negXpair))
 	{
-		auto it = std::find_if(loadedChunks.begin(), loadedChunks.end(), [&](const Chunk& other){return chunkExists(other, -1, 0);});
-		if (it != loadedChunks.end()) 
-		{
-			negXChunk = &(*it);
-		}
+		negXChunk = &loadedChunksMap.at(negXpair);
 	}										    
 	else
 	{
@@ -69,39 +55,18 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::deque<C
 	//posZ
 	if (loadedChunksMap.count(posZpair))
 	{
-		auto it = std::find_if(loadedChunks.begin(), loadedChunks.end(), [&](const Chunk& other){return chunkExists(other, 0, 1);});
-		if (it != loadedChunks.end()) 
-		{
-			posZChunk = &(*it);
-		}
+		posZChunk = &loadedChunksMap.at(posZpair);
 
-		//std::cout << "already existing posZChunk positions: (" << posZChunk->getX() << "," << posZChunk->getZ() << ") for : (" << chunk.getX() << "," << chunk.getZ() << ")" << std::endl << std::endl;
-		//if (posZpair.first != posZChunk->getX() || posZpair.second != posZChunk->getZ())
-		//{
-		//	std::cout << "ERROR_ FALSE pozZChunk" << std::endl;
-		//	if (posZpair.first != posZChunk->getX())
-		//		std::cout << "posZpair_first: [" << posZpair.first << "] is not equal to " << "posZChunk_X [" << posZChunk->getX() << "]" << std::endl;
-		//	if (posZpair.second != posZChunk->getZ())
-		//		std::cout << "posZpair_second: [" << posZpair.second << "] is not equal to " << "posZChunk_Z [" << posZChunk->getZ() << "]" << std::endl;
-		//	std::cout << "__________________________________________________" << std::endl << std::endl;
-		//}
-		//std::cout << "LOG_end" << std::endl << "-----------------" << std::endl;
 	}										    
 	else
 	{
-		//std::cout << "creating temp new posZ chunk at: (" << chunk.getX() << "," << chunk.getZ() + 1 << ") for : (" << chunk.getX() << "," << chunk.getZ() << ")" << std::endl;
 		posZChunk = new Chunk(chunk.getX(), chunk.getZ() + 1, 0);
-		//std::cout << "temp new posZChunk positions: (" << posZChunk->getX() << "," << posZChunk->getZ() << ") for : (" << chunk.getX() << "," << chunk.getZ() << ")" << std::endl << "______________________" << std::endl;
 	}
 
 	//negZ
 	if (loadedChunksMap.count(negZpair))
 	{
-		auto it = std::find_if(loadedChunks.begin(), loadedChunks.end(), [&](const Chunk& other){return chunkExists(other, 0, -1);});
-		if (it != loadedChunks.end()) 
-		{
-			negZChunk = &(*it);
-		}
+		negZChunk = &loadedChunksMap.at(negZpair);
 	}										    
 	else
 	{
