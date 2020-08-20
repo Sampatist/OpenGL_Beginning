@@ -4,12 +4,14 @@
 
 #include <functional> 
 
+#define DEBUG_PLANE_TERRAIN
+
 //std::hash<std::string> TerrainHash;
 //int HashValue = TerrainHash(SEED);
 
 constexpr int OCTAVES = 10;
 constexpr int WATER_LEVEL = 100;
-constexpr float AMPLITUDE = 48;
+constexpr float AMPLITUDE = 10;
 constexpr float SCALE = 0.0035f;
 
 static SimplexNoise noise;
@@ -39,7 +41,11 @@ std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> TerrainGenerator::g
 			float heightValue = WATER_LEVEL + noiseValue * AMPLITUDE;
 			for (int k = 0; k < CHUNK_HEIGHT; k++)
 			{
+//#ifdef DEBUG_PLANE_TERRAIN
+				//if (k < 150)
+//#else
 				if (k < heightValue)
+//#endif
 				{
 					blocks[INDEX(i, j, k)] = 1;
 				}

@@ -45,17 +45,22 @@ in vec4 fragPosSunViewSpace;
 
 layout(location = 0) out vec4 color;
 
-const float minAmbientValue = 0.10;
+const float minAmbientValue = 0.05;
 const float maxAmbientValue = 0.15;
-const float diffuseStrenght = 0.5;
-const float global_illuminationStrenght = 0.3;
+const float diffuseStrenght = 0.6;
+const float global_illuminationStrenght = 0.25;
 const float specularStrengthCoef = 10.0f;
 const float fogCoefficient = 7.0f / 3.0f;
 const float MaxFog = 1;
 
 uniform vec3 u_lightDir;
+uniform vec3 u_lightDirForw;
+uniform vec3 u_lightDirBackw;
+
 uniform float u_ChunkDistance;
 uniform sampler2DShadow u_SunShadowTexture;
+
+const float PI = 3.1418;
 
 float calcShadow(float dotLightNormal)
 {
@@ -95,44 +100,72 @@ vec3 applyFog( vec3  rgb,       // original color of the pixel
 
 void main()
 {
+	//Setup
 	vec3 baseColor = vec3(0.36, 0.88, 0.34);
 	vec3 sunColor = vec3(1.0, 1.0, 0.75);
 	vec3 moonLightColor = vec3(0.006, 0.02, 0.07);
 
 	vec3 lightDir = u_lightDir;
-	vec3 moonLightDir = -u_lightDir;
+	vec3 lightDirForw = u_lightDirForw;
+	vec3 lightDirBackw = u_lightDirBackw;
 
-	float sunsetEffect = max(sin(lightDir.y * 1.6f), 0);
-	float moonEffect = max(sin(moonLightDir.y * 1.6f), 0);
+	vec3 moonLightDir = -lightDir;
 
-	vec3 CurrentLightColor = (sunColor * float((lightDir.y > 0))) + (moonLightColor * float((moonLightDir.y > 0)));
-	vec3 CurrentLight = CurrentLightColor * (sunsetEffect + moonEffect);
+	float sunsetEffect = max(sin(lightDir.y * (PI/2)), 0);
+	float sunsetEffectForw = max(sin(lightDirForw.y * (PI / 2)), 0);
+	float sunsetEffectBackw = max(sin(lightDirBackw.y * (PI / 2)), 0);
 
-	vec3 ambient = max(maxAmbientValue * CurrentLight * length(normal), minAmbientValue * baseColor * length(normal));
-	vec3 global_illumination = CurrentLight * global_illuminationStrenght;
+	float moonEffect = max(sin(moonLightDir.y * (PI / 2)), 0);
 	
-	float sunShadow = calcShadow(dot(normalize(normal), lightDir));
-	
-	vec3 diffuse;
-	vec3 specular;
+	//vec3 CurrentLightColor = (sunColor * float((lightDir.y > 0)) + (moonLightColor * float(moonLightDir.y > 0)));
+	//vec3 CurrentLight = CurrentLightColor * (sunsetEffect + moonEffect);
+
+	////Ambient
+	//sun
+	vec3 ambientSunMiddle = max(maxAmbientValue * sunColor * sunsetEffect * length(normal), minAmbientValue * baseColor * length(normal));
+	vec3 ambientSunForw = max(maxAmbientValue * sunColor * sunsetEffectForw * length(normal), minAmbientValue * baseColor * length(normal));
+	vec3 ambientSunBackw = max(maxAmbientValue * sunColor * sunsetEffectBackw * length(normal), minAmbientValue * baseColor * length(normal));
+	vec3 ambientSun = (ambientSunMiddle + ambientSunForw + ambientSunBackw) / 3;
+	//moon
+	vec3 ambientMoon = max(maxAmbientValue * moonLightColor * moonEffect * length(normal), minAmbientValue * baseColor * length(normal));
+	///total
+	vec3 ambient = ambientSun + ambientMoon;
+
+	////Global Illumination
+	//sun
+	vec3 global_illuminationSunMiddle = sunColor * sunsetEffect * global_illuminationStrenght;
+	vec3 global_illuminationSunForw = sunColor * sunsetEffectForw * global_illuminationStrenght;
+	vec3 global_illuminationSunBackw = sunColor * sunsetEffectBackw * global_illuminationStrenght;
+	vec3 global_illuminationSun = (global_illuminationSunMiddle + global_illuminationSunForw + global_illuminationSunBackw) / 3;
+	//moon
+	vec3 global_illuminationMoon = moonLightColor * moonEffect * global_illuminationStrenght;
+	///total
+	vec3 global_illumination = global_illuminationSun + global_illuminationMoon;
+
+
+	////Diffuse
 	float specularStrenght = (specularStrengthCoef / max(length(camDir), 10));
-
-	if (bool(sunsetEffect)) 
-	{
-		float sunDiff = max(dot(normal, lightDir), 0) * sunShadow;
-		diffuse = diffuseStrenght * sunDiff * CurrentLight;
+	float sunShadow = calcShadow(dot(normalize(normal), lightDir));
+	//sun
+	float sunDiffMiddle = max(dot(normal, lightDir), 0) * sunsetEffect * sunShadow;
+	float sunDiffForw = max(dot(normal, lightDirForw), 0) * sunsetEffectForw;
+	float sunDiffBackw = max(dot(normal, lightDirBackw), 0) * sunsetEffectBackw;
+	float sunDiff = (sunDiffMiddle + sunDiffForw + sunDiffBackw)/3;
+	vec3 sunDiffuse = diffuseStrenght * sunDiff * sunColor;
+	//moon
+	float moonDiff = max(dot(normal, moonLightDir), 0) * moonEffect;
+	vec3 moonDiffuse = diffuseStrenght * moonDiff * moonLightColor;
+	///total
+	vec3 diffuse = sunDiffuse + moonDiffuse;
 	
-		float sunSpec = pow(max(dot(normalize(normal), normalize(lightDir + normalize(camDir))), 0), 360) * sunShadow;
-		specular = specularStrenght * sunSpec * CurrentLight;
-	}
-	else
-	{
-		float moonDiff = max(dot(normal, moonLightDir), 0);
-		diffuse = diffuseStrenght * moonDiff * CurrentLight;
+	////Specular
+	float sunSpec = pow(max(dot(normalize(normal), normalize(lightDir + normalize(camDir))), 0), 360) * sunShadow;
+	vec3 sunSpecular = specularStrenght * sunSpec * sunColor * sunsetEffect;
 	
-		float moonSpec    = pow(max(dot(normalize(normal), normalize(moonLightDir + normalize(camDir))), 0), 360);
-		specular = specularStrenght * moonSpec * CurrentLight;
-	}
+	float moonSpec    = pow(max(dot(normalize(normal), normalize(moonLightDir + normalize(camDir))), 0), 360);
+	vec3 moonSpecular = specularStrenght * moonSpec * moonLightColor * moonEffect;
+	
+	vec3 specular = sunSpecular + moonSpecular;
 	
 	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse) + specular;
 	vec3 foggedColor = applyFog(originalColor, length(camDir));

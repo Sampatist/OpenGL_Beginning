@@ -92,10 +92,10 @@ void Renderer::initialize()
     int backgroundVertex[18] =
     {
         -1,-1,0,
-        1,-1,0,
-        1,1,0,
-        1,1,0,
-        -1,1,0,
+         1,-1,0,
+         1, 1,0,
+         1, 1,0,
+        -1, 1,0,
         -1,-1,0
     };
     glBufferData(GL_ARRAY_BUFFER, sizeof(backgroundVertex), backgroundVertex, GL_STATIC_DRAW);
@@ -116,7 +116,7 @@ void Renderer::initialize()
     //Theoretical Limit: 786432
     // More than enough!!!  40000
     // 3D NOISE
-
+    glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
     Shaders::initialize();
@@ -264,9 +264,14 @@ void Renderer::draw()
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     
     //Render Sun
-    Sun::SetDirection(Game::getGameTime());
+    Sun::SetDirections(Game::getGameTime());
     glm::vec3 lightDir = Sun::GetDirection();
+    glm::vec3 lightDirForw = Sun::GetDirectionForw();
+    glm::vec3 lightDirBackw = Sun::GetDirectionBackw();
+
     Shaders::getChunkShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
+    Shaders::getChunkShader()->SetUniform3f("u_lightDirForw", lightDirForw.x, lightDirForw.y, lightDirForw.z);
+    Shaders::getChunkShader()->SetUniform3f("u_lightDirBackw", lightDirBackw.x, lightDirBackw.y, lightDirBackw.z);
 
     Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewMatrix()[0][0]);
     auto camPos = Camera::GetPosition();
@@ -279,17 +284,19 @@ void Renderer::draw()
     // Render background quad
     Shaders::getBackgroundQuadShader()->Bind();
     auto camDir = Camera::GetCameraAngle();
-    Shaders::getBackgroundQuadShader()->SetUniform3f("u_CamDir", camDir.x, camDir.y, camDir.z);
+    Shaders::getBackgroundQuadShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
+    Shaders::getBackgroundQuadShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
     Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &ViewMatrix()[0][0]);
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glViewport(0, 0, 1600, 900);
-    glDisable(GL_DEPTH_TEST);
     glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
+    glClear(GL_DEPTH_BUFFER_BIT);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 
     // Render to shadow map frame buffer
+    Shaders::getSunShadowMapShader()->Bind();
     glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
     glViewport(0, 0, 4096, 4096);
     glClear(GL_DEPTH_BUFFER_BIT);
@@ -312,6 +319,8 @@ void Renderer::draw()
     // Render to the screen
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, 1600, 900);
 
     for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
