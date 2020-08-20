@@ -21,7 +21,7 @@ static inline int32_t packData(int x, int z, int y, int8_t blockID, FaceDirectio
 	return x | (z << 5) | (y << 10) | (blockID << 19) | ((int)dir << 27) | ((int)dir << 30);
 }
 
-MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, Chunk, hash_pair>& loadedChunksMap)
+MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, std::shared_ptr<Chunk>, hash_pair>& loadedChunksMap)
 {
 	std::pair<int, int> posXpair(chunk.getX() + 1, chunk.getZ());
 	std::pair<int, int> negXpair(chunk.getX() - 1, chunk.getZ());
@@ -35,7 +35,7 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 	//posX
 	if (loadedChunksMap.count(posXpair))
 	{
-		posXChunk = &loadedChunksMap.at(posXpair);
+		posXChunk = loadedChunksMap.at(posXpair).get();
 	}										    
 	else
 	{
@@ -45,7 +45,7 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 	//negX
 	if (loadedChunksMap.count(negXpair))
 	{
-		negXChunk = &loadedChunksMap.at(negXpair);
+		negXChunk = loadedChunksMap.at(negXpair).get();
 	}										    
 	else
 	{
@@ -55,7 +55,7 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 	//posZ
 	if (loadedChunksMap.count(posZpair))
 	{
-		posZChunk = &loadedChunksMap.at(posZpair);
+		posZChunk = loadedChunksMap.at(posZpair).get();
 
 	}										    
 	else
@@ -66,7 +66,7 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 	//negZ
 	if (loadedChunksMap.count(negZpair))
 	{
-		negZChunk = &loadedChunksMap.at(negZpair);
+		negZChunk = loadedChunksMap.at(negZpair).get();
 	}										    
 	else
 	{

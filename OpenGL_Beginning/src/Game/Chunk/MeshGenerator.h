@@ -18,5 +18,5 @@ namespace MeshGenerator
 			: x(x), z(z), mesh(mesh)
 		{};
 	};
-	MeshGenerator::Mesh generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, Chunk, hash_pair>& loadedChunksMap);
+	MeshGenerator::Mesh generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, std::shared_ptr<Chunk>, hash_pair>& loadedChunksMap);
 }

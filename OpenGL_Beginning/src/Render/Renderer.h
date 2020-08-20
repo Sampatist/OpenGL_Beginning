@@ -4,17 +4,19 @@
 
 namespace Renderer
 {
+	
 	struct RenderableMesh
 	{
 		unsigned int vboID;
 		unsigned int bufferSize;
 		unsigned int capacity;
-		int chunkX;
-		int chunkZ;
-		RenderableMesh(int chunkX, int chunkZ)
-			:vboID(0), bufferSize(0), capacity(0), chunkX(chunkX), chunkZ(chunkZ)
+		static const unsigned int INITIAL_CAPACITY = 10000;
+		static const unsigned int DELTA_CAPACITY = 10000;
+		RenderableMesh()
+			:vboID(0), bufferSize(0), capacity(INITIAL_CAPACITY)
 		{};
 	};
+
 	void initialize();
 	GLFWwindow* const getWindow();
 	void bufferChunks();

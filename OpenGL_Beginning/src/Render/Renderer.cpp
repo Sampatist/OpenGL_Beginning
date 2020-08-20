@@ -11,6 +11,7 @@
 #include "Chunk/CHUNKARRAY.h"
 #include "Shadows.h"
 #include "Game.h"
+#include "Chunk/pairHash.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -27,7 +28,7 @@ MessageCallback(GLenum source,
 }
 
 static GLFWwindow* window = nullptr;
-static std::vector<Renderer::RenderableMesh> drawableMeshes;
+static std::unordered_map<std::pair<int, int>, Renderer::RenderableMesh, hash_pair> drawableMeshes;
 static unsigned int chunkIndexBufferObject = 0;
 static unsigned int sunShadowMapFramebuffer = 0;
 static unsigned int backgroundQuadBufferObject = 0;
@@ -107,15 +108,15 @@ void Renderer::initialize()
 
     for (int i = 0; i < chunkCountLookup[Settings::viewDistance]; i++)
     {
-        drawableMeshes.emplace_back(dummyChunkPos,0);
-        glGenBuffers(1, &drawableMeshes[i].vboID);
-        glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-        drawableMeshes[i].capacity = 10000;
-        glBufferData(GL_ARRAY_BUFFER, drawableMeshes[i].capacity, nullptr, GL_STREAM_DRAW);
+        std::pair<int, int> chunkLocation(dummyChunkPos, i);
+        drawableMeshes[chunkLocation] = RenderableMesh();
+        glGenBuffers(1, &drawableMeshes[chunkLocation].vboID);
+        glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[chunkLocation].vboID);
+        glBufferData(GL_ARRAY_BUFFER, drawableMeshes[chunkLocation].capacity, nullptr, GL_STREAM_DRAW);
     }
     //Theoretical Limit: 786432
     // More than enough!!!  40000
-    // 3D NOISE
+    // 3D NOISE 600000
     glEnable(GL_DEPTH_TEST);
     glEnable(GL_CULL_FACE);
 
@@ -204,59 +205,130 @@ void Renderer::bufferChunks()
     }
     else
     */
-    
-    for(int i = lastIndex; i < drawableMeshes.size(); i++)
+    //chunkCount = 0;
+    //chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
+    //chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
+
+    //while (chunkCount < chunkCountLookup[renderDistance])
+    std::pair<int, int> erasableChunkLocation;
+    bool isErasable = false;
+
+    for(auto& pair : drawableMeshes)
     {
-        lastIndex = (lastIndex + 1) % drawableMeshes.size();
-        if (isFar(drawableMeshes[i].chunkX, drawableMeshes[i].chunkZ))
+        if(isErasable)
+        {
+            drawableMeshes.erase(erasableChunkLocation);
+            isErasable = false;
+		}
+
+        RenderableMesh& drawableMesh = pair.second;
+        auto& chunkLocation = pair.first;
+
+        if(isFar(chunkLocation.first, chunkLocation.second))
         {
             ChunkManager::meshLock.lock();
-            if (ChunkManager::chunkMeshes.empty())
+            if(ChunkManager::chunkMeshes.empty())
             {
                 ChunkManager::meshLock.unlock();
                 break;
-            }
+			}
+            
             MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
-            // find_if uzun suruyo olabilir
-            // unordered map kullanilip O(1) lookupdan 
-            // yararlanilabilir...
-            if(std::find_if(drawableMeshes.begin(), drawableMeshes.end(), 
-                [&](RenderableMesh& rm) { return rm.chunkX == frontMesh.x && rm.chunkZ == frontMesh.z; }) != drawableMeshes.end()) {
+            
+            if(frontMesh.x == chunkLocation.first && frontMesh.z == chunkLocation.second)
+            {
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
                 std::cout << "Mesh exists, erasing mesh.\n";
-            }
-            else{
-                drawableMeshes[i].bufferSize = frontMesh.mesh.size();
-                drawableMeshes[i].chunkX = frontMesh.x;
-                drawableMeshes[i].chunkZ = frontMesh.z;
+			}
+            else
+            {
+                // buffer mesh data to buffer
+                std::pair<int, int> newChunkLocation(frontMesh.x, frontMesh.z);
+                drawableMeshes[newChunkLocation].capacity = drawableMesh.capacity;
+                drawableMeshes[newChunkLocation].vboID = drawableMesh.vboID;
+                drawableMeshes[newChunkLocation].bufferSize = frontMesh.mesh.size();
+
+                erasableChunkLocation = chunkLocation;
+                isErasable = true;
+
+                drawableMesh = drawableMeshes[newChunkLocation];
+
                 int32_t* arr = &(frontMesh.mesh[0]);
-                int bufferSizeBytes = drawableMeshes[i].bufferSize * 4;
-                // do this
-                if(glm::abs(drawableMeshes[i].capacity - 5000 - bufferSizeBytes) > 5000)          
+                int bufferSizeBytes = drawableMesh.bufferSize * 4;
+                if(glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY)/2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY/2))          
                 {
                     unsigned int tempVboID = 0;
-                    int extraCapacity = int(bufferSizeBytes - drawableMeshes[i].capacity) / 10000 + (drawableMeshes[i].capacity < bufferSizeBytes);
-                    //printf("%d %d %d\n", drawableMeshes[i].capacity, bufferSizeBytes, extraCapacity);
-                    drawableMeshes[i].capacity += 10000 * extraCapacity;
+                    int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
+                    drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
                     glGenBuffers(1, &tempVboID);
                     glBindBuffer(GL_ARRAY_BUFFER, tempVboID);
-                    glBufferData(GL_ARRAY_BUFFER, drawableMeshes[i].capacity, nullptr, GL_STREAM_DRAW);
+                    glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
-                    glDeleteBuffers(1, &drawableMeshes[i].vboID);
-                    drawableMeshes[i].vboID = tempVboID;
+                    glDeleteBuffers(1, &drawableMesh.vboID);
+                    drawableMesh.vboID = tempVboID;
 				}
                 else
                 {
-                    glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
-                    glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
+                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);
 				}
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
-            }
+			}
             ChunkManager::meshLock.unlock();
-            //if (++bufferOperations == 100)
-            //    break;
-        }
+		}
 	}
+ //   for(int i = lastIndex; i < drawableMeshes.size(); i++)
+ //   {
+ //       lastIndex = (lastIndex + 1) % drawableMeshes.size();
+ //       if (isFar(drawableMeshes[i].chunkX, drawableMeshes[i].chunkZ))
+ //       {
+ //           ChunkManager::meshLock.lock();
+ //           if (ChunkManager::chunkMeshes.empty())
+ //           {
+ //               ChunkManager::meshLock.unlock();
+ //               break;
+ //           }
+ //           MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
+ //           // find_if uzun suruyo olabilir
+ //           // unordered map kullanilip O(1) lookupdan 
+ //           // yararlanilabilir...
+ //           if(std::find_if(drawableMeshes.begin(), drawableMeshes.end(), 
+ //               [&](RenderableMesh& rm) { return rm.chunkX == frontMesh.x && rm.chunkZ == frontMesh.z; }) != drawableMeshes.end()) {
+ //               ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+ //               std::cout << "Mesh exists, erasing mesh.\n";
+ //           }
+ //           else{
+ //               drawableMeshes[i].bufferSize = frontMesh.mesh.size();
+ //               drawableMeshes[i].chunkX = frontMesh.x;
+ //               drawableMeshes[i].chunkZ = frontMesh.z;
+ //               int32_t* arr = &(frontMesh.mesh[0]);
+ //               int bufferSizeBytes = drawableMeshes[i].bufferSize * 4;
+ //               // do this
+ //               if(glm::abs(drawableMeshes[i].capacity - 5000 - bufferSizeBytes) > 5000)          
+ //               {
+ //                   unsigned int tempVboID = 0;
+ //                   int extraCapacity = int(bufferSizeBytes - drawableMeshes[i].capacity) / 10000 + (drawableMeshes[i].capacity < bufferSizeBytes);
+ //                   //printf("%d %d %d\n", drawableMeshes[i].capacity, bufferSizeBytes, extraCapacity);
+ //                   drawableMeshes[i].capacity += 10000 * extraCapacity;
+ //                   glGenBuffers(1, &tempVboID);
+ //                   glBindBuffer(GL_ARRAY_BUFFER, tempVboID);
+ //                   glBufferData(GL_ARRAY_BUFFER, drawableMeshes[i].capacity, nullptr, GL_STREAM_DRAW);
+ //                   glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
+ //                   glDeleteBuffers(1, &drawableMeshes[i].vboID);
+ //                   drawableMeshes[i].vboID = tempVboID;
+	//			}
+ //               else
+ //               {
+ //                   glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
+ //                   glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
+	//			}
+ //               ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+ //           }
+ //           ChunkManager::meshLock.unlock();
+ //           //if (++bufferOperations == 100)
+ //           //    break;
+ //       }
+	//}
 }
 
 void Renderer::draw()
@@ -302,16 +374,19 @@ void Renderer::draw()
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
 
-    for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
+    for (auto pair : drawableMeshes)
     {
-        if ((*iter).bufferSize == 0)
+        std::pair<int, int> chunkLocation = pair.first;
+        RenderableMesh& drawableMesh = pair.second;
+
+        if (drawableMesh.bufferSize == 0)
             continue;
-        Shaders::getSunShadowMapShader()->SetUniform2i("u_ChunkOffset", (*iter).chunkX * CHUNK_WIDTH, (*iter).chunkZ * CHUNK_LENGTH);
-        glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
+        Shaders::getSunShadowMapShader()->SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
+        glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
         glVertexAttribIPointer(0, 1, GL_INT, sizeof(int), 0);
-        glDrawElements(GL_TRIANGLES, (*iter).bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, drawableMesh.bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
     }     
        
     Shaders::getChunkShader()->Bind();
@@ -323,17 +398,18 @@ void Renderer::draw()
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, 1600, 900);
 
-    for (auto iter = drawableMeshes.begin(); iter != drawableMeshes.end(); iter++)
+    for (auto pair : drawableMeshes)
     {
-        if ((*iter).bufferSize == 0)
+        std::pair<int, int> chunkLocation = pair.first;
+        RenderableMesh& drawableMesh = pair.second;
+
+        if (drawableMesh.bufferSize == 0)
             continue;
-        Shaders::getChunkShader()->SetUniform2i("u_ChunkOffset", (*iter).chunkX * CHUNK_WIDTH, (*iter).chunkZ * CHUNK_LENGTH);
-        glBindBuffer(GL_ARRAY_BUFFER, (*iter).vboID);
+        Shaders::getChunkShader()->SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
+        glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
         glVertexAttribIPointer(0, 1, GL_INT, sizeof(int), 0);
-        glDrawElements(GL_TRIANGLES, (*iter).bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
+        glDrawElements(GL_TRIANGLES, drawableMesh.bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
     }
 }
-
-

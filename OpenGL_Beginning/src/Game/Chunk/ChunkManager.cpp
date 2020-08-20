@@ -12,10 +12,9 @@
 #include <algorithm>
 #include "pairHash.h"
 
-static std::unordered_map<std::pair<int, int>, Chunk, hash_pair> loadedChunksMap;
+static std::unordered_map<std::pair<int, int>, std::shared_ptr<Chunk>, hash_pair> loadedChunksMap;
 static int oldCamChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 static int oldCamChunkZ = (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
-static std::atomic<bool> terminateStatus = false;
 
 static bool isFar(int x, int z, int x2, int z2)
 {
@@ -28,7 +27,7 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
 	//Unload Chunks O(n)
     for(auto keyValuePair : loadedChunksMap){
-		Chunk& chunk = keyValuePair.second;
+		Chunk& chunk = *keyValuePair.second;
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
         {
 			chunk.isMeshReady = false;
@@ -48,10 +47,10 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	{
 		std::pair<int, int> chunkLocation(chunkX, chunkZ);
 
-		if(loadedChunksMap.count(chunkLocation) == 0)
+		if (loadedChunksMap.count(chunkLocation) == 0)
 		{
 			// load chunk
-			loadedChunksMap.emplace(std::make_pair(chunkLocation, Chunk{chunkX, chunkZ, 0}));
+			loadedChunksMap[chunkLocation] = std::make_shared<Chunk>(chunkX, chunkZ, 0);
 		}
 		chunkCount++;
 		chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
@@ -66,7 +65,7 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	while(chunkCount < chunkCountLookup[renderDistance])
 	{
 		std::pair<int, int> chunkLocation(chunkX, chunkZ);
-		Chunk& chunk = loadedChunksMap.at(chunkLocation);
+		Chunk& chunk = *loadedChunksMap.at(chunkLocation);
 		if (!chunk.isMeshReady)
         {
             MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
@@ -90,7 +89,7 @@ struct blockUpdate
 
 static void issueBlockUpdate(blockUpdate)
 {
-	//modifty loaded chunk spesific block
+	//modifty the nesseesaruy chunk spesific block
 	//create mesh that can be accessible by buffer
 	
 }
@@ -117,12 +116,10 @@ void ChunkManager::update()
 		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
 		printf("Adding queue.\n");
 		queueEmpty = false;
-		terminateStatus = true;
 	}
 	if(head.wait_for(std::chrono::seconds(0)) == std::future_status::ready && !queueEmpty)
 	{
 		queueEmpty = true;
-		terminateStatus = false;
 		head = std::async(std::launch::async, reloadChunks, queued.first, queued.second);
 	}
 	printf("Ready_status %d.\n", head.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
