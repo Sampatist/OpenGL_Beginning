@@ -21,21 +21,22 @@ MessageCallback(GLenum source,
     GLsizei length,
     const GLchar* message,
     const void* userParam)
-{
+{ 
     fprintf(stderr, "GL CALLBACK: %s type = 0x%x, severity = 0x%x, message = %s\n",
         (type == GL_DEBUG_TYPE_ERROR ? "** GL ERROR **" : ""),
-        type, severity, message);
-}
-
+        type, severity, message);  
+} 
+  
 static GLFWwindow* window = nullptr;
-static std::unordered_map<std::pair<int, int>, Renderer::RenderableMesh, hash_pair> drawableMeshes;
-static unsigned int chunkIndexBufferObject = 0;
+static std::unordered_map<std::pair<int, int>, Renderer::RenderableMesh, hash_pair> drawableMeshes;  
+static std::vector<std::pair<int, int>> erasableChunkLocations;   
+static unsigned int chunkIndexBufferObject = 0;    
 static unsigned int sunShadowMapFramebuffer = 0;
-static unsigned int backgroundQuadBufferObject = 0;
-
-void Renderer::initialize()
-{
-    /* Initialize the library */
+static unsigned int backgroundQuadBufferObject = 0; 
+   
+void Renderer::initialize() 
+{  
+    /* Initialize the library */ 
     if (!glfwInit())
         return;
 
@@ -110,6 +111,7 @@ void Renderer::initialize()
     {
         std::pair<int, int> chunkLocation(dummyChunkPos, i);
         drawableMeshes[chunkLocation] = RenderableMesh();
+        ChunkManager::bufferedInfoMap[chunkLocation] = nullptr;
         glGenBuffers(1, &drawableMeshes[chunkLocation].vboID);
         glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[chunkLocation].vboID);
         glBufferData(GL_ARRAY_BUFFER, drawableMeshes[chunkLocation].capacity, nullptr, GL_STREAM_DRAW);
@@ -188,7 +190,7 @@ bool isFar(int x, int z)
 {
 	int relativex = x - (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 	int relativez = z - (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
-	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 3) * (Settings::viewDistance + 3);
+	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
 }
 
 static int lastIndex = 0;
@@ -197,35 +199,17 @@ static int lastIndex = 0;
 
 void Renderer::bufferChunks()
 {
-    int bufferOperations = 0;
-
-    /*
-    if (blockBreak_status) {
-        buffer(block);
-    }
-    else
-    */
-    //chunkCount = 0;
-    //chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
-    //chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
-
-    //while (chunkCount < chunkCountLookup[renderDistance])
-    std::pair<int, int> erasableChunkLocation;
-    bool isErasable = false;
-
     for(auto& pair : drawableMeshes)
     {
-        if(isErasable)
-        {
-            drawableMeshes.erase(erasableChunkLocation);
-            isErasable = false;
-		}
-
         RenderableMesh& drawableMesh = pair.second;
         auto& chunkLocation = pair.first;
 
         if(isFar(chunkLocation.first, chunkLocation.second))
         {
+            ChunkManager::bufferMapLock.lock();
+            ChunkManager::bufferedInfoMap.erase(chunkLocation);
+            ChunkManager::bufferMapLock.unlock();
+
             ChunkManager::meshLock.lock();
             if(ChunkManager::chunkMeshes.empty())
             {
@@ -234,8 +218,9 @@ void Renderer::bufferChunks()
 			}
             
             MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
+            std::pair<int, int> incomingChunkLocation(frontMesh.x, frontMesh.z);
             
-            if(frontMesh.x == chunkLocation.first && frontMesh.z == chunkLocation.second)
+            if(drawableMeshes.count(incomingChunkLocation))
             {
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
                 std::cout << "Mesh exists, erasing mesh.\n";
@@ -243,29 +228,23 @@ void Renderer::bufferChunks()
             else
             {
                 // buffer mesh data to buffer
-                std::pair<int, int> newChunkLocation(frontMesh.x, frontMesh.z);
-                drawableMeshes[newChunkLocation].capacity = drawableMesh.capacity;
-                drawableMeshes[newChunkLocation].vboID = drawableMesh.vboID;
-                drawableMeshes[newChunkLocation].bufferSize = frontMesh.mesh.size();
+                drawableMeshes[incomingChunkLocation].vboID = drawableMesh.vboID;
+                drawableMeshes[incomingChunkLocation].capacity = drawableMesh.capacity;
+                drawableMeshes[incomingChunkLocation].bufferSize = frontMesh.mesh.size();
 
-                erasableChunkLocation = chunkLocation;
-                isErasable = true;
+                erasableChunkLocations.push_back(chunkLocation);
 
-                drawableMesh = drawableMeshes[newChunkLocation];
+                drawableMesh = drawableMeshes[incomingChunkLocation];
 
                 int32_t* arr = &(frontMesh.mesh[0]);
                 int bufferSizeBytes = drawableMesh.bufferSize * 4;
                 if(glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY)/2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY/2))          
-                {
-                    unsigned int tempVboID = 0;
+                {          
                     int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
                     drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
-                    glGenBuffers(1, &tempVboID);
-                    glBindBuffer(GL_ARRAY_BUFFER, tempVboID);
+                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
                     glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
-                    glDeleteBuffers(1, &drawableMesh.vboID);
-                    drawableMesh.vboID = tempVboID;
 				}
                 else
                 {
@@ -273,10 +252,23 @@ void Renderer::bufferChunks()
                     glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);
 				}
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+                ChunkManager::bufferMapLock.lock();
+                ChunkManager::bufferedInfoMap[incomingChunkLocation] = nullptr;
+                ChunkManager::bufferMapLock.unlock();
 			}
             ChunkManager::meshLock.unlock();
 		}
 	}
+    for (auto it = begin(erasableChunkLocations); it != end(erasableChunkLocations); ++it)
+    {
+        drawableMeshes.erase(*it);
+    }
+    erasableChunkLocations.clear();
+    std::cout << drawableMeshes.size() << std::endl;
+    ChunkManager::meshLock.lock();
+    std::cout << ChunkManager::chunkMeshes.size() << std::endl;
+    ChunkManager::meshLock.unlock();
+
  //   for(int i = lastIndex; i < drawableMeshes.size(); i++)
  //   {
  //       lastIndex = (lastIndex + 1) % drawableMeshes.size();

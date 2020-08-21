@@ -26,13 +26,16 @@ static bool isFar(int x, int z, int x2, int z2)
 static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
 	//Unload Chunks O(n)
-    for(auto keyValuePair : loadedChunksMap){
-		Chunk& chunk = *keyValuePair.second;
+	for (auto it = loadedChunksMap.begin(); it != loadedChunksMap.end();) {
+		Chunk& chunk = *it->second;
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
         {
-			chunk.isMeshReady = false;
-            loadedChunksMap.erase(keyValuePair.first);
+            it = loadedChunksMap.erase(it);
         }
+		else
+		{
+			++it;
+		}
     }
 
 	//loadedChunksMap.erase(std::remove_if(loadedChunksMap.begin(), loadedChunksMap.end(), [=](Chunk& chunk) { return isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ); }), loadedChunksMap.end());
@@ -69,11 +72,24 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 		if (!chunk.isMeshReady)
         {
             MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
+            chunk.isMeshReady = true;
             ChunkManager::meshLock.lock();
             ChunkManager::chunkMeshes.push_back(mesh);
             ChunkManager::meshLock.unlock();
-            chunk.isMeshReady = true;
         }
+		else
+		{
+			ChunkManager::bufferMapLock.lock();
+			bool exists = ChunkManager::bufferedInfoMap.count(chunkLocation);
+			ChunkManager::bufferMapLock.unlock();
+			if (!exists)
+			{
+				MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
+				ChunkManager::meshLock.lock();
+				ChunkManager::chunkMeshes.push_back(mesh);
+				ChunkManager::meshLock.unlock();
+			}
+		}
 		chunkCount++;
 		chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
 		chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;

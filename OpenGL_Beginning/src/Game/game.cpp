@@ -3,7 +3,7 @@
 #include "Settings.h"
 #include "Renderer.h"
 
-static float GameTime = 0.0f;
+static float GameTime = 1.0f;
 
 void Game::initialize()
 {
@@ -15,7 +15,7 @@ void Game::initialize()
 
 void Game::run()
 {
-	GameTime += 0.0f;
+	GameTime += 0.0001f;
 	CameraController::update();
 	Renderer::bufferChunks();
 	Renderer::draw();

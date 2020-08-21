@@ -8,7 +8,7 @@ constexpr float PI = 3.14f;
 
 constexpr float SENSITIVITY = 0.0005f;
 
-constexpr float SPEED = 10.0f;
+constexpr float SPEED = 0.2f;
 constexpr float SPEED_MULTIPLIER = 2.5f;
 
 constexpr float YAW_ANGLE_UPPER_LIMIT = PI/2;
