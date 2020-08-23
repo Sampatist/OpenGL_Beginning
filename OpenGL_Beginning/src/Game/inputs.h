@@ -17,4 +17,5 @@ namespace inputManager
 	};
 	float getInput(Input input);
 	void initialize();
+	void update();
 }

@@ -19,21 +19,6 @@ static std::vector<MouseBind> mouseBinds;
 static double oldMouseX;
 static double oldMouseY;
 
-static float* mX;
-static float* mY;
-
-static void cursorPositionCallback(GLFWwindow* window, double xpos, double ypos)
-{
-    double deltaX = oldMouseX - xpos;
-    double deltaY = oldMouseY - ypos;
-    
-    *mX += deltaX;
-    *mY += deltaY;
-
-    oldMouseX = xpos;
-    oldMouseY = ypos;
-}
-
 static void mouseButtonCallback(GLFWwindow* window, int button, int action, int mods)
 {
 	for (MouseBind& mouseBind : mouseBinds)
@@ -55,14 +40,20 @@ static void mouseButtonCallback(GLFWwindow* window, int button, int action, int 
 void input::bindMouse(GLFWwindow* window)
 {
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-	glfwSetCursorPosCallback(window, cursorPositionCallback);
+	if (glfwRawMouseMotionSupported())
+		glfwSetInputMode(window, GLFW_RAW_MOUSE_MOTION, GLFW_TRUE);
     glfwSetMouseButtonCallback(window, mouseButtonCallback);
 }
 
-void input::updateMouse(float* mouseX, float* mouseY)
+void input::updateMouse(double* deltaMouseX, double* deltaMouseY)
 {
-    mX = mouseX;
-    mY = mouseY;
+	double mouseX;
+	double mouseY;
+	glfwGetCursorPos(Renderer::getWindow(), &mouseX, &mouseY);
+	*deltaMouseX = mouseX - oldMouseX;
+	*deltaMouseY = mouseY - oldMouseY;
+	oldMouseX = mouseX;
+	oldMouseY = mouseY;
 }
 
 void input::addMouseBinding(float* inputV, int positiveKey)
