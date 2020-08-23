@@ -19,11 +19,14 @@ static	glm::vec3 up_vector(0.0f, 1.0f, 0.0f);
 static	glm::vec3 right_vector(0.0f);
 static	glm::vec3 forward_vector(0.0f);
 
+static float mouseX = 0.0f;
+static float mouseY = 0.0f;
+
 void PlayerController::update()
 {
 	//CAMERA
-	float cumulativeMousex = -inputManager::getInput(inputManager::Input::MOUSEX);
-	float cumulativeMousey = -inputManager::getInput(inputManager::Input::MOUSEY);
+	float deltaMouseX = inputManager::getInput(inputManager::Input::MOUSEX);
+	float deltaMouseY = inputManager::getInput(inputManager::Input::MOUSEY);
 
 	//MOVEMENT
 	float right = inputManager::getInput(inputManager::Input::RIGHT);
@@ -66,9 +69,11 @@ void PlayerController::update()
 		}
 	}
 
-	float mouseyWithLimit = std::max(YAW_ANGLE_LOWER_LIMIT, std::min(cumulativeMousey * SENSITIVITY, YAW_ANGLE_UPPER_LIMIT));
+	mouseX += deltaMouseX * SENSITIVITY;
+	mouseY += deltaMouseY * SENSITIVITY;
+	mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
 
-	Camera::setAngle(mouseyWithLimit, cumulativeMousex * SENSITIVITY);
+	Camera::setAngle(mouseY, mouseX);
 
 	right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
 	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));

@@ -148,8 +148,8 @@ void main()
 	float sunShadow = calcShadow(dot(normalize(normal), lightDir));
 	//sun
 	float sunDiffMiddle = max(dot(normal, lightDir), 0) * sunsetEffect * sunShadow;
-	float sunDiffForw = max(dot(normal, lightDirForw), 0) * sunsetEffectForw;
-	float sunDiffBackw = max(dot(normal, lightDirBackw), 0) * sunsetEffectBackw;
+	float sunDiffForw = max(dot(normal, lightDirForw), 0) * sunsetEffectForw * sunShadow;
+	float sunDiffBackw = max(dot(normal, lightDirBackw), 0) * sunsetEffectBackw * sunShadow;
 	float sunDiff = (sunDiffMiddle + sunDiffForw + sunDiffBackw)/3;
 	vec3 sunDiffuse = diffuseStrenght * sunDiff * sunColor;
 	//moon

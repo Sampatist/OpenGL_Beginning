@@ -6,8 +6,8 @@
 
 static float right = 0.0f;
 static float forward = 0.0f;
-static float mousex = 0.0f;
-static float mousey = 0.0f;
+static double deltaMouseX = 0.0f;
+static double deltaMouseY = 0.0f;
 static float fly = 0.0f;
 static float shift = 0.0f;
 static float mouseRight = 0.0f;
@@ -22,9 +22,9 @@ float inputManager::getInput(Input input)
 	case Input::RIGHT:
 		return right;
 	case Input::MOUSEX:
-		return mousex;
+		return deltaMouseX;
 	case Input::MOUSEY:
-		return mousey;
+		return deltaMouseY;
 	case Input::FLY:
 		return fly;
 	case Input::SHIFT:
@@ -40,11 +40,15 @@ void inputManager::initialize()
 {
 	input::bindKeyboard(Renderer::getWindow());
 	input::bindMouse(Renderer::getWindow());
-	input::updateMouse(&mousex, &mousey);
 	input::addMouseBinding(&mouseRight, Settings::place);
 	input::addMouseBinding(&mouseLeft, Settings::dig);
 	input::addKeyboardBinding(&forward, Settings::forward, Settings::back);
 	input::addKeyboardBinding(&right, Settings::right, Settings::left);
 	input::addKeyboardBinding(&fly, Settings::up, Settings::down);
 	input::addKeyboardBinding(&shift, GLFW_KEY_LEFT_SHIFT);
+}
+
+void inputManager::update()
+{
+	input::updateMouse(&deltaMouseX, &deltaMouseY);
 }

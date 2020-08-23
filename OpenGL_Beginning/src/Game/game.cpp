@@ -17,6 +17,7 @@ void Game::initialize()
 void Game::run()
 {
 	GameTime += 0.0001f;
+	inputManager::update();
 	BlockEdit::rayCast();
 	PlayerController::update();
 	Renderer::bufferChunks();
