@@ -29,8 +29,9 @@
     <ClCompile Include="src\Game\Chunk\MeshGenerator.cpp" />
     <ClCompile Include="src\Render\ShadersNamespace.cpp" />
     <ClCompile Include="src\Render\Shadows.cpp" />
-    <ClCompile Include="src\PhysicsEngine\blockEdit.cpp" />
     <ClCompile Include="src\Game\PlayerController.cpp" />
+    <ClCompile Include="src\Game\Chunk\blockEdit.cpp" />
+    <ClCompile Include="src\PhysicsEngine\rayCast.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -1358,10 +1359,13 @@
     <ClInclude Include="src\Render\Shadows.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\PhysicsEngine\blockEdit.h">
+    <ClInclude Include="src\Game\PlayerController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game\PlayerController.h">
+    <ClInclude Include="src\Game\Chunk\blockEdit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PhysicsEngine\rayCast.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

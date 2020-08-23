@@ -2,7 +2,7 @@
 #include "inputs.h"
 #include "Settings.h"
 #include "Renderer.h"
-#include "PhysicsEngine/blockEdit.h"
+#include "Chunk/blockEdit.h"
 
 static float GameTime = 1.0f;
 
@@ -18,8 +18,9 @@ void Game::run()
 {
 	GameTime += 0.0001f;
 	inputManager::update();
-	BlockEdit::rayCast();
+	BlockEdit::update();
 	PlayerController::update();
+    ChunkManager::update();
 	Renderer::bufferChunks();
 	Renderer::draw();
 }

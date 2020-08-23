@@ -6,29 +6,46 @@
 #define GLM_FORCE_INLINE
 
 #include <Render/Renderer.h>
-
-#include <Render/VertexBuffer.h>
-#include <Render/IndexBuffer.h>
+#include "Game.h"
 
 #include <glm/vec3.hpp>
-#include <glm/vec3.hpp> // glm::vec3 
-#include <glm/vec4.hpp> // glm::vec4 
-#include <glm/mat4x4.hpp> // glm::mat4 
-#include <glm/gtc/matrix_transform.hpp> // glm::translate, glm::rotate, glm::scale, glm::perspective
-
-#include <input_handlers/KeyboardEventHandler.h>
-#include <input_handlers/MouseEventHandler.h>
-
-#include "Game.h"
-#include "Shader.h"
-
-#include "Settings.h"
-
-//genTerrain TEST
-#include "Chunk/TerrainGenerator.h"
+#include "glm/vec2.hpp"
+#include "glm/geometric.hpp"
 
 int main(void)
 {
+
+    //glm::vec3 chunk (0.5f, 0.7f, 0.0f);
+    //
+    //std::vector<glm::vec3> hull;
+    //
+    //for(int i = 0; i < 8; i++)
+    //{
+    //    hull.push_back(glm::vec3(0.2f, 0.8f, 0.0f));
+	//}
+    //
+    //auto start = std::chrono::system_clock::now();
+    //
+    //for(int i = 0; i < 5000; i++)
+    //{
+    //    bool inside = true;
+    //    for(int i = 0; i < hull.size(); i++)
+    //    {
+    //        glm::vec3 a = hull[(i + 1) % hull.size()] - hull[i];
+    //        glm::vec3 b = chunk - hull[i];
+    //        //counterclockwise
+    //        if(glm::cross(a, b).z < 0){
+    //            inside = false;
+    //            break;
+	//		}
+	//	}
+    //    //render if inside
+	//}
+    //
+    //std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now()-start;
+    //std::cout << elapsed_seconds.count()*1000 << std::endl;
+    //
+    //return 0;
     //std::this_thread::sleep_for(std::chrono::seconds(10));
 
     Game::initialize();
@@ -47,7 +64,6 @@ int main(void)
             printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
             frameCount = 0;
             lastTime = glfwGetTime();
-            ChunkManager::update();
         }
         //////
 

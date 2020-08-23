@@ -12,7 +12,8 @@
 #include "Shadows.h"
 #include "Game.h"
 #include "Chunk/pairHash.h"
-#include "PhysicsEngine/blockEdit.h"
+#include "PhysicsEngine/rayCast.h"
+#include "Chunk/blockEdit.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -59,7 +60,7 @@ void Renderer::initialize()
     /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
     
     //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, , 1080, GLFW_DONT_CARE);
-    glfwSwapInterval(1);           
+    glfwSwapInterval(0);           
 
     if (glewInit() != GLEW_OK)
         return;
@@ -201,14 +202,14 @@ void Renderer::bufferChunks()
         //std::cout << "hmm" << std::endl;
 
         Renderer::blockUpdate = false;
-        BlockEdit::RayCastInfo info = BlockEdit::getCurrentRayInfo();
+        RayCast::Info info = BlockEdit::getCurrentRayInfo();
 
         for (int x = -1; x < 2; x++)
         {
             for (int z = -1; z < 2; z++) {
                 //std::cout << "hmm" << x << z << std::endl;
-                int chunkLocationX = info.block.location.first + x;
-                int chunkLocationZ = info.block.location.second + z;
+                int chunkLocationX = info.block.chunkLocation.first + x;
+                int chunkLocationZ = info.block.chunkLocation.second + z;
                 std::pair<int, int> chunkLocation(chunkLocationX, chunkLocationZ);
 
                 Chunk& chunk = *ChunkManager::loadedChunksMap[chunkLocation];

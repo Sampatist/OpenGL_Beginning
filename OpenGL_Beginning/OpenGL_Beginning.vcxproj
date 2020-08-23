@@ -21,6 +21,7 @@
   <ItemGroup>
     <ClCompile Include="src\Application.cpp" />
     <ClCompile Include="src\Game\Camera.cpp" />
+    <ClCompile Include="src\Game\Chunk\blockEdit.cpp" />
     <ClCompile Include="src\Game\PlayerController.cpp" />
     <ClCompile Include="src\Game\Chunk\Chunk.cpp" />
     <ClCompile Include="src\Game\Chunk\ChunkManager.cpp" />
@@ -29,7 +30,7 @@
     <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\Game\inputs.cpp" />
     <ClCompile Include="src\Game\Settings.cpp" />
-    <ClCompile Include="src\PhysicsEngine\blockEdit.cpp" />
+    <ClCompile Include="src\PhysicsEngine\rayCast.cpp" />
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\input_handlers\KeyboardEventHandler.cpp" />
     <ClCompile Include="src\input_handlers\MouseEventHandler.cpp" />
@@ -183,6 +184,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\Game\Camera.h" />
+    <ClInclude Include="src\Game\Chunk\blockEdit.h" />
     <ClInclude Include="src\Game\PlayerController.h" />
     <ClInclude Include="src\Game\Chunk\Chunk.h" />
     <ClInclude Include="src\Game\Chunk\CHUNKARRAY.h" />
@@ -193,8 +195,8 @@
     <ClInclude Include="src\Game\Game.h" />
     <ClInclude Include="src\Game\Gme.h" />
     <ClInclude Include="src\Game\inputs.h" />
-    <ClInclude Include="src\PhysicsEngine\blockEdit.h" />
     <ClInclude Include="src\PhysicsEngine\PhysicalObjects.h" />
+    <ClInclude Include="src\PhysicsEngine\rayCast.h" />
     <ClInclude Include="src\Render\IndexBuffer.h" />
     <ClInclude Include="src\input_handlers\KeyboardEventHandler.h" />
     <ClInclude Include="src\input_handlers\MouseEventHandler.h" />

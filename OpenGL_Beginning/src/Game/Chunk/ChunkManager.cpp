@@ -123,7 +123,6 @@ void ChunkManager::start()
 //	}
 //	return chunks;
 //}
-
 void ChunkManager::update()
 {
 	int cameraChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
@@ -144,5 +143,10 @@ void ChunkManager::update()
 		head = std::async(std::launch::async, reloadChunks, queued.first, queued.second);
 	}
 	//printf("Ready_status %d.\n", head.wait_for(std::chrono::seconds(0)) == std::future_status::ready);
-	printf("%d loaded chunks.\n", loadedChunksMap.size());
+	static int counter = 0;
+	if(counter++ == 60)
+	{
+		printf("%d loaded chunks.\n", loadedChunksMap.size());
+		counter = 0;
+	}
 }

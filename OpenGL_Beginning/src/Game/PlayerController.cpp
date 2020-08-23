@@ -3,7 +3,7 @@
 #include "inputs.h"
 #include <iostream>
 #include <algorithm>
-#include "PhysicsEngine/blockEdit.h"
+#include "Chunk/blockEdit.h"
 
 constexpr float PI = 3.14f;
 
@@ -40,32 +40,32 @@ void PlayerController::update()
 
 	if(mouseLeft)
 	{
-		BlockEdit::RayCastInfo info = BlockEdit::getCurrentRayInfo();
+		RayCast::Info info = BlockEdit::getCurrentRayInfo();
 		//std::cout << "does left click work?" << std::endl;
-		//std::cout << "info: " << info.hit << std::endl << (int)info.direction << std::endl
-		//	<< info.block.blockID << std::endl << info.block.x << std::endl 
+		//std::cout << "info: " << info.hit << std::endl << info.block.blockID 
+		//	<< std::endl << info.block.x << std::endl 
 		//	<< info.block.z << std::endl << info.block.y << std::endl;
 		if(info.hit)
 		{
 			//std::cout << "does info.hit work?" << std::endl;
-
+			//ChunkManager::addBlockUpdate({location, x, z, y, 1});
 			ChunkManager::loadedChunksLock.lock();
-			ChunkManager::loadedChunksMap[info.block.location]->setBlock(INDEX(info.block.x, info.block.z, info.block.y), 0);
+			ChunkManager::loadedChunksMap[info.block.chunkLocation]->setBlock(INDEX(info.block.x, info.block.z, info.block.y), 0);
 			ChunkManager::loadedChunksLock.unlock();
 			Renderer::blockUpdate = true;
 		}
 	}
 	if(mouseRight == 1)
 	{
-		BlockEdit::RayCastInfo info = BlockEdit::getCurrentRayInfo();
+		//RayCast::Info info = BlockEdit::getCurrentRayInfo();
 
-		if (info.hit)
+		//if (info.hit)
 		{
 			//std::cout << "does info.hit work?" << std::endl;
-			ChunkManager::loadedChunksLock.lock();
-			ChunkManager::loadedChunksMap[info.block.location]->setBlock(INDEX(info.block.x, info.block.z, info.block.y) + (int)info.direction , info.block.blockID);
-			ChunkManager::loadedChunksLock.unlock();
-			Renderer::blockUpdate = true;
+			//ChunkManager::loadedChunksLock.lock();
+			//ChunkManager::loadedChunksMap[info.block.chunkLocation]->setBlock(INDEX(info.block.x, info.block.z, info.block.y) + (int)info.faceNormal , info.block.blockID);
+			//ChunkManager::loadedChunksLock.unlock();
+			//Renderer::blockUpdate = true;
 		}
 	}
 
