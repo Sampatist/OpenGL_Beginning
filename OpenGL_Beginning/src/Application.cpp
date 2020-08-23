@@ -41,8 +41,8 @@ int main(void)
     while (!glfwWindowShouldClose(Renderer::getWindow()))
     {
         //Frame
-        frameCount+=5;
-        if (glfwGetTime() - lastTime >= 0.2f)
+        frameCount++;
+        if (glfwGetTime() - lastTime >= 1.0f)
         {
             printf("%f ms/frame, %d fps\n", 1000.0f / frameCount, frameCount);
             frameCount = 0;

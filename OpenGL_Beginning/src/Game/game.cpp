@@ -2,6 +2,7 @@
 #include "inputs.h"
 #include "Settings.h"
 #include "Renderer.h"
+#include "PhysicsEngine/blockEdit.h"
 
 static float GameTime = 1.0f;
 
@@ -16,7 +17,8 @@ void Game::initialize()
 void Game::run()
 {
 	GameTime += 0.0001f;
-	CameraController::update();
+	BlockEdit::rayCast();
+	PlayerController::update();
 	Renderer::bufferChunks();
 	Renderer::draw();
 }

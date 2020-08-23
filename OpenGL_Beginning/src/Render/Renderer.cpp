@@ -12,6 +12,7 @@
 #include "Shadows.h"
 #include "Game.h"
 #include "Chunk/pairHash.h"
+#include "PhysicsEngine/blockEdit.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -193,50 +194,30 @@ bool isFar(int x, int z)
 	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
 }
 
-static int lastIndex = 0;
-
-/* Yama yapildi, Maybe we can make the cameraPosition static for every buffer. */
-
 void Renderer::bufferChunks()
 {
-    for(auto& pair : drawableMeshes)
-    {
-        RenderableMesh& drawableMesh = pair.second;
-        auto& chunkLocation = pair.first;
+    if(Renderer::blockUpdate)
+    {   
+        //std::cout << "hmm" << std::endl;
 
-        if(isFar(chunkLocation.first, chunkLocation.second))
+        Renderer::blockUpdate = false;
+        BlockEdit::RayCastInfo info = BlockEdit::getCurrentRayInfo();
+
+        for (int x = -1; x < 2; x++)
         {
-            ChunkManager::bufferMapLock.lock();
-            ChunkManager::bufferedInfoMap.erase(chunkLocation);
-            ChunkManager::bufferMapLock.unlock();
+            for (int z = -1; z < 2; z++) {
+                //std::cout << "hmm" << x << z << std::endl;
+                int chunkLocationX = info.block.location.first + x;
+                int chunkLocationZ = info.block.location.second + z;
+                std::pair<int, int> chunkLocation(chunkLocationX, chunkLocationZ);
 
-            ChunkManager::meshLock.lock();
-            if(ChunkManager::chunkMeshes.empty())
-            {
-                ChunkManager::meshLock.unlock();
-                break;
-			}
-            
-            MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
-            std::pair<int, int> incomingChunkLocation(frontMesh.x, frontMesh.z);
-            
-            if(drawableMeshes.count(incomingChunkLocation))
-            {
-                ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
-                std::cout << "Mesh exists, erasing mesh.\n";
-			}
-            else
-            {
-                // buffer mesh data to buffer
-                drawableMeshes[incomingChunkLocation].vboID = drawableMesh.vboID;
-                drawableMeshes[incomingChunkLocation].capacity = drawableMesh.capacity;
-                drawableMeshes[incomingChunkLocation].bufferSize = frontMesh.mesh.size();
+                Chunk& chunk = *ChunkManager::loadedChunksMap[chunkLocation];
+                MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, ChunkManager::loadedChunksMap);
 
-                erasableChunkLocations.push_back(chunkLocation);
+                RenderableMesh& drawableMesh = drawableMeshes[chunkLocation];
+                drawableMesh.bufferSize = mesh.mesh.size();
 
-                drawableMesh = drawableMeshes[incomingChunkLocation];
-
-                int32_t* arr = &(frontMesh.mesh[0]);
+                int32_t* arr = &(mesh.mesh[0]);
                 int bufferSizeBytes = drawableMesh.bufferSize * 4;
                 if(glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY)/2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY/2))          
                 {          
@@ -245,82 +226,91 @@ void Renderer::bufferChunks()
                     glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
                     glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
-				}
+		        }
                 else
                 {
                     glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);
-				}
+		        }
+            }
+        }
+    }
+    
+    
+    for (auto& pair : drawableMeshes)
+    {
+        RenderableMesh& drawableMesh = pair.second;
+        auto& chunkLocation = pair.first;
+    
+        if (isFar(chunkLocation.first, chunkLocation.second))
+        {
+            //Check if there is any mesh in line
+            ChunkManager::meshLock.lock();
+            if (ChunkManager::chunkMeshes.empty())
+            {
+                ChunkManager::meshLock.unlock();
+                break;
+            }
+    
+            MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
+            std::pair<int, int> incomingChunkLocation(frontMesh.x, frontMesh.z);
+    
+            //Delete incoming mesh if it is already buffered
+            if (drawableMeshes.count(incomingChunkLocation))
+            {
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+                std::cout << "Mesh exists, erasing mesh.\n";
+            }
+            //Buffer it if incoming chunk is a new chunk
+            else
+            {
+                //Set the old chunk as unbuffered
+                ChunkManager::bufferMapLock.lock();
+                ChunkManager::bufferedInfoMap.erase(chunkLocation);
+                ChunkManager::bufferMapLock.unlock();
+                //Put the old chunkLocation to erasableChunks
+                erasableChunkLocations.push_back(chunkLocation);
+    
+                // buffer mesh data to buffer
+                drawableMeshes[incomingChunkLocation].vboID = drawableMesh.vboID;
+                drawableMeshes[incomingChunkLocation].capacity = drawableMesh.capacity;
+                drawableMeshes[incomingChunkLocation].bufferSize = frontMesh.mesh.size();
+    
+                drawableMesh = drawableMeshes[incomingChunkLocation];
+    
+                int32_t* arr = &(frontMesh.mesh[0]);
+                int bufferSizeBytes = drawableMesh.bufferSize * 4;
+                if (glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY) / 2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY / 2))
+                {
+                    int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
+                    drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
+                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
+                    glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
+                }
+                else
+                {
+                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
+                    glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);
+                }
+                //erase front mesh
+                ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
+                //Set the new chunkLocation as buffered
                 ChunkManager::bufferMapLock.lock();
                 ChunkManager::bufferedInfoMap[incomingChunkLocation] = nullptr;
                 ChunkManager::bufferMapLock.unlock();
-			}
+            }
             ChunkManager::meshLock.unlock();
-		}
-	}
+        }
+    }
+    
+    //Delete erasable chunks from drawableMeshes map
     for (auto it = begin(erasableChunkLocations); it != end(erasableChunkLocations); ++it)
     {
         drawableMeshes.erase(*it);
     }
+    //Empty erasableChunksLocations vector
     erasableChunkLocations.clear();
-    std::cout << drawableMeshes.size() << std::endl;
-    ChunkManager::meshLock.lock();
-    std::cout << ChunkManager::chunkMeshes.size() << std::endl;
-    ChunkManager::meshLock.unlock();
-
- //   for(int i = lastIndex; i < drawableMeshes.size(); i++)
- //   {
- //       lastIndex = (lastIndex + 1) % drawableMeshes.size();
- //       if (isFar(drawableMeshes[i].chunkX, drawableMeshes[i].chunkZ))
- //       {
- //           ChunkManager::meshLock.lock();
- //           if (ChunkManager::chunkMeshes.empty())
- //           {
- //               ChunkManager::meshLock.unlock();
- //               break;
- //           }
- //           MeshGenerator::Mesh& frontMesh = ChunkManager::chunkMeshes.front();
- //           // find_if uzun suruyo olabilir
- //           // unordered map kullanilip O(1) lookupdan 
- //           // yararlanilabilir...
- //           if(std::find_if(drawableMeshes.begin(), drawableMeshes.end(), 
- //               [&](RenderableMesh& rm) { return rm.chunkX == frontMesh.x && rm.chunkZ == frontMesh.z; }) != drawableMeshes.end()) {
- //               ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
- //               std::cout << "Mesh exists, erasing mesh.\n";
- //           }
- //           else{
- //               drawableMeshes[i].bufferSize = frontMesh.mesh.size();
- //               drawableMeshes[i].chunkX = frontMesh.x;
- //               drawableMeshes[i].chunkZ = frontMesh.z;
- //               int32_t* arr = &(frontMesh.mesh[0]);
- //               int bufferSizeBytes = drawableMeshes[i].bufferSize * 4;
- //               // do this
- //               if(glm::abs(drawableMeshes[i].capacity - 5000 - bufferSizeBytes) > 5000)          
- //               {
- //                   unsigned int tempVboID = 0;
- //                   int extraCapacity = int(bufferSizeBytes - drawableMeshes[i].capacity) / 10000 + (drawableMeshes[i].capacity < bufferSizeBytes);
- //                   //printf("%d %d %d\n", drawableMeshes[i].capacity, bufferSizeBytes, extraCapacity);
- //                   drawableMeshes[i].capacity += 10000 * extraCapacity;
- //                   glGenBuffers(1, &tempVboID);
- //                   glBindBuffer(GL_ARRAY_BUFFER, tempVboID);
- //                   glBufferData(GL_ARRAY_BUFFER, drawableMeshes[i].capacity, nullptr, GL_STREAM_DRAW);
- //                   glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
- //                   glDeleteBuffers(1, &drawableMeshes[i].vboID);
- //                   drawableMeshes[i].vboID = tempVboID;
-	//			}
- //               else
- //               {
- //                   glBindBuffer(GL_ARRAY_BUFFER, drawableMeshes[i].vboID);
- //                   glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMeshes[i].bufferSize * sizeof(int32_t), arr);
-	//			}
- //               ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
- //           }
- //           ChunkManager::meshLock.unlock();
- //           //if (++bufferOperations == 100)
- //           //    break;
- //       }
-	//}
 }
 
 void Renderer::draw()
@@ -358,6 +348,8 @@ void Renderer::draw()
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
     glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    // Render block highlight
 
     // Render to shadow map frame buffer
     Shaders::getSunShadowMapShader()->Bind();

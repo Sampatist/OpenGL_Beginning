@@ -26,6 +26,8 @@ int Settings::viewDistance = 0;
 float Settings::aspectRatio = 16.0f / 9.0f;
 float Settings::ZNEAR = 0.1f;
 float Settings::ZFAR = 1500.0f;
+float Settings::dig = GLFW_MOUSE_BUTTON_LEFT;
+float Settings::place = GLFW_MOUSE_BUTTON_RIGHT;
 
 //Map
 std::unordered_map<std::string, int> settingsMap =

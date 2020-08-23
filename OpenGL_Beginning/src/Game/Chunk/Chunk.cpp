@@ -8,7 +8,3 @@ Chunk::Chunk(int x, int z, int y)
 	blocks = TerrainGenerator::generateTerrain(x, z, y);
 	//mesh = MeshGenerator::generateMesh(this);
 }
-
-Chunk::~Chunk()
-{
-}

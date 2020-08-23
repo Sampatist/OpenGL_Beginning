@@ -1,5 +1,5 @@
 #pragma once
-#include "CameraController.h"
+#include "PlayerController.h"
 #include "inputs.h"
 #include "Chunk/ChunkManager.h"
 

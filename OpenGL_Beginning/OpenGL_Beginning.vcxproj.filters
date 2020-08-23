@@ -18,7 +18,6 @@
     <ClCompile Include="src\Render\VertexBuffer.cpp" />
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\Game\Camera.cpp" />
-    <ClCompile Include="src\Game\CameraController.cpp" />
     <ClCompile Include="src\Game\inputs.cpp" />
     <ClCompile Include="src\Render\Shader.cpp" />
     <ClCompile Include="src\Game\Settings.cpp" />
@@ -30,6 +29,8 @@
     <ClCompile Include="src\Game\Chunk\MeshGenerator.cpp" />
     <ClCompile Include="src\Render\ShadersNamespace.cpp" />
     <ClCompile Include="src\Render\Shadows.cpp" />
+    <ClCompile Include="src\PhysicsEngine\blockEdit.cpp" />
+    <ClCompile Include="src\Game\PlayerController.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -1312,9 +1313,6 @@
     <ClInclude Include="src\Game\Camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\Game\CameraController.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="src\Game\inputs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1358,6 +1356,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\Render\Shadows.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PhysicsEngine\blockEdit.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\PlayerController.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

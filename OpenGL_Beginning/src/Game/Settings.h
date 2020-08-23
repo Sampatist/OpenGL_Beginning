@@ -21,6 +21,8 @@ namespace Settings
 	extern float aspectRatio;
 	extern float ZNEAR;
 	extern float ZFAR;
+	extern float dig;
+	extern float place;
 	
 	// beyanlar
 	void readSettingsFile();

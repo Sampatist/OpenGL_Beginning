@@ -19,6 +19,7 @@ namespace Renderer
 
 	void initialize();
 	GLFWwindow* const getWindow();
+	inline bool blockUpdate = false;
 	void bufferChunks();
 	void endFrame();
 	void terminate();
