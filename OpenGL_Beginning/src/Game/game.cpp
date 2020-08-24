@@ -3,12 +3,14 @@
 #include "Settings.h"
 #include "Renderer.h"
 #include "Chunk/blockEdit.h"
+#include "View.h"
 
-static float GameTime = 1.0f;
+static float GameTime = 0.4f;
 
 void Game::initialize()
 {
 	Settings::readSettingsFile();
+	ViewFrustum::initialize();
 	Renderer::initialize();
 	inputManager::initialize();
 	ChunkManager::start();
@@ -16,10 +18,14 @@ void Game::initialize()
 
 void Game::run()
 {
-	GameTime += 0.0001f;
+	GameTime += 0.0000f;
 	inputManager::update();
+	
 	BlockEdit::update();
 	PlayerController::update();
+
+	ViewFrustum::update();
+
     ChunkManager::update();
 	Renderer::bufferChunks();
 	Renderer::draw();

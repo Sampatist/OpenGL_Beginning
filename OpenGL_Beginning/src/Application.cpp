@@ -14,7 +14,7 @@
 
 int main(void)
 {
-
+    //spedTest for efficient chunk drawing
     //glm::vec3 chunk (0.5f, 0.7f, 0.0f);
     //
     //std::vector<glm::vec3> hull;

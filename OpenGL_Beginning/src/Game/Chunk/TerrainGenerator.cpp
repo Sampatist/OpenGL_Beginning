@@ -41,13 +41,14 @@ std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> TerrainGenerator::g
 			float heightValue = WATER_LEVEL + noiseValue * AMPLITUDE;
 			for (int k = 0; k < CHUNK_HEIGHT; k++)
 			{
-//#ifdef DEBUG_PLANE_TERRAIN
-				//if (k < 150)
-//#else
-				if (k < heightValue)
-//#endif
+				if(k == (int)heightValue)
 				{
-					blocks[INDEX(i, j, k)] = 1;
+					blocks[INDEX(i, j, k)] = 2;
+				}
+
+				else if(k < heightValue)
+				{
+					blocks[INDEX(i, j, k)] = 2;
 				}
 			}
 		}

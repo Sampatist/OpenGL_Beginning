@@ -25,7 +25,7 @@ int Settings::viewDistance = 0;
 //Unchangeable settings
 float Settings::aspectRatio = 16.0f / 9.0f;
 float Settings::ZNEAR = 0.1f;
-float Settings::ZFAR = 1500.0f;
+float Settings::ZFAR = 900.0f;
 float Settings::dig = GLFW_MOUSE_BUTTON_LEFT;
 float Settings::place = GLFW_MOUSE_BUTTON_RIGHT;
 

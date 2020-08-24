@@ -32,6 +32,7 @@
     <ClCompile Include="src\Game\PlayerController.cpp" />
     <ClCompile Include="src\Game\Chunk\blockEdit.cpp" />
     <ClCompile Include="src\PhysicsEngine\rayCast.cpp" />
+    <ClCompile Include="src\Render\View.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />

@@ -1,6 +1,8 @@
 #pragma once
 #include "GL\glew.h"
 #include "GLFW/glfw3.h"
+#include "glm/vec3.hpp"
+#include "glm/mat4x4.hpp"
 
 namespace Renderer
 {

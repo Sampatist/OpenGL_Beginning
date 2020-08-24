@@ -67,23 +67,46 @@ void PlayerController::update()
 			//ChunkManager::loadedChunksLock.unlock();
 			//Renderer::blockUpdate = true;
 		}
+
+		mouseX += deltaMouseX * SENSITIVITY;
+		mouseY += deltaMouseY * SENSITIVITY;
+		mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
+
+		Camera::setDetachedAngle(mouseY, mouseX);
+
+		right_vector = glm::normalize(glm::cross(Camera::GetDetachedCameraAngle(), up_vector));
+		forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
+
+		glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
+
+		Camera::setDetachedPosition(
+			Camera::GetDetachedPosition() + 
+			(glm::abs(glm::length(translate)) ? 
+			 glm::normalize(translate) : 
+			 glm::vec3(0.0f)) * 
+			 SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
 	}
+	else
+	{
+		mouseX += deltaMouseX * SENSITIVITY;
+		mouseY += deltaMouseY * SENSITIVITY;
+		mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
 
-	mouseX += deltaMouseX * SENSITIVITY;
-	mouseY += deltaMouseY * SENSITIVITY;
-	mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
+		Camera::setAngle(mouseY, mouseX);
 
-	Camera::setAngle(mouseY, mouseX);
+		right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
+		forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
 
-	right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
-	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
+		glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
 
-	glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
+		Camera::setPosition(
+			Camera::GetPosition() + 
+			(glm::abs(glm::length(translate)) ? 
+			 glm::normalize(translate) : 
+			 glm::vec3(0.0f)) * 
+			 SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
 
-	Camera::setPosition(
-		Camera::GetPosition() + 
-		(glm::abs(glm::length(translate)) ? 
-		 glm::normalize(translate) : 
-		 glm::vec3(0.0f)) * 
-		 SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
+		Camera::setDetachedPosition(Camera::GetPosition());
+		Camera::setDetachedAngle(mouseY, mouseX);
+	}
 }

@@ -4,6 +4,8 @@
 #include <atomic>
 #include <unordered_map>
 #include "pairHash.h"
+#include <cassert>
+#include <iostream>
 
 enum class FaceDirection
 {
@@ -15,8 +17,8 @@ enum class TexCoord
 	bottomLeft, bottomRight, topLeft, topRight
 };
 
-//                               5      5      9          8              3                  2
-static inline int32_t packData(int x, int z, int y, int8_t blockID, FaceDirection dir, TexCoord texCoord)
+//                               5      5      9       8              3                  2
+static inline int32_t packData(int x, int z, int y, int blockID, FaceDirection dir, TexCoord texCoord)
 {
 	return x | (z << 5) | (y << 10) | (blockID << 19) | ((int)dir << 27) | ((int)dir << 30);
 }

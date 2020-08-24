@@ -39,6 +39,7 @@
     <ClCompile Include="src\Render\ShadersNamespace.cpp" />
     <ClCompile Include="src\Render\Shadows.cpp" />
     <ClCompile Include="src\Render\VertexBuffer.cpp" />
+    <ClCompile Include="src\Render\View.cpp" />
     <ClCompile Include="src\vendor\Mr.Noise\SimplexNoise.cpp" />
   </ItemGroup>
   <ItemGroup>

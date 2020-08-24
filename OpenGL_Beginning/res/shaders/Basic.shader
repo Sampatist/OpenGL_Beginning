@@ -6,6 +6,7 @@ layout(location = 0) in int data;
 out vec3 normal;
 out vec3 camDir;
 out vec4 fragPosSunViewSpace;
+flat out int id;
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
@@ -29,6 +30,7 @@ void main()
 	int z = ((data >> 5) & 0x1F) + u_ChunkOffset.y;
 	int y = ((data >> 10) & 0x1FF);
 	int normalIndex = ((data >> 27) & 0x7);
+	int id = int((data >> 19) & 0xFF);
 	normal = NORMALS[normalIndex];
 	vec3 position = vec3(x, y, z);
 	camDir = u_CamPos - position;
@@ -42,6 +44,7 @@ void main()
 in vec3 normal;
 in vec3 camDir;
 in vec4 fragPosSunViewSpace;
+flat in int id;
 
 layout(location = 0) out vec4 color;
 
@@ -101,7 +104,20 @@ vec3 applyFog( vec3  rgb,       // original color of the pixel
 void main()
 {
 	//Setup
-	vec3 baseColor = vec3(0.36, 0.88, 0.34);
+	vec3 baseColor = vec3(1.0, id / 2.0f, 1.00);
+	if(id == 1)
+	{
+		baseColor = vec3(0.36, 0.88, 0.34);
+	}
+	else if(id == 2)
+	{
+		baseColor = vec3(0.4, 0.2, 0);
+	}
+	else if(id == 3) 
+	{
+		baseColor = vec3(0.4, 0.4, 0.4);
+	}
+
 	vec3 sunColor = vec3(1.0, 1.0, 0.75);
 	vec3 moonLightColor = vec3(0.006, 0.02, 0.07);
 
