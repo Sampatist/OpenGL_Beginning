@@ -9,8 +9,8 @@ constexpr float PI = 3.14f;
 
 constexpr float SENSITIVITY = 0.0005f;
 
-constexpr float SPEED = 0.2f;
-constexpr float SPEED_MULTIPLIER = 2.5f;
+constexpr float SPEED = 0.6f; //0.2f feels good
+constexpr float SPEED_MULTIPLIER = 5.5f;  //dont know
 
 constexpr float YAW_ANGLE_UPPER_LIMIT = PI/2 - 0.1f;
 constexpr float YAW_ANGLE_LOWER_LIMIT = -PI/2 + 0.05f;
@@ -41,18 +41,35 @@ void PlayerController::update()
 	if(mouseLeft)
 	{
 		RayCast::Info info = BlockEdit::getCurrentRayInfo();
-		//std::cout << "does left click work?" << std::endl;
-		//std::cout << "info: " << info.hit << std::endl << info.block.blockID 
-		//	<< std::endl << info.block.x << std::endl 
-		//	<< info.block.z << std::endl << info.block.y << std::endl;
+
 		if(info.hit)
 		{
-			//std::cout << "does info.hit work?" << std::endl;
-			//ChunkManager::addBlockUpdate({location, x, z, y, 1});
-			ChunkManager::loadedChunksLock.lock();
-			ChunkManager::loadedChunksMap[info.block.chunkLocation]->setBlock(INDEX(info.block.x, info.block.z, info.block.y), 0);
-			ChunkManager::loadedChunksLock.unlock();
-			Renderer::blockUpdate = true;
+			for (int x = -1; x <= 1; x++)
+			{
+				for (int z = -1; z <= 1; z++)
+				{
+					auto actualBlockX = info.block.x - x * CHUNK_WIDTH;
+					auto actualBlockZ = info.block.z - z * CHUNK_LENGTH;
+					auto actualBlockY = info.block.y;
+					std::pair<int, int> location(info.block.chunkLocation.first + x, info.block.chunkLocation.second + z);
+					for (int k = 0; k < CHUNK_HEIGHT; k++)
+					{
+						for (int j = 0; j < CHUNK_LENGTH; j++)
+						{
+							for (int i = 0; i < CHUNK_WIDTH; i++)
+							{
+								auto a = (actualBlockX - i) * (actualBlockX - i);
+								auto b = (actualBlockY - k) * (actualBlockY - k);
+								auto c = (actualBlockZ - j) * (actualBlockZ - j);
+								if (a + b + c < 100)
+								{
+									ChunkManager::addBlockUpdate({location, i, j, k, 0});
+								}
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 	if(mouseRight == 1)

@@ -2,8 +2,8 @@
 
 static RayCast::Info lastViewRayInfo;
 
-constexpr float RAY_LENGTH = 5;
-constexpr int RAY_LIMIT = 30;
+constexpr float RAY_LENGTH = 200;
+constexpr int RAY_LIMIT = 3000;
 
 RayCast::Info BlockEdit::getCurrentRayInfo()
 {

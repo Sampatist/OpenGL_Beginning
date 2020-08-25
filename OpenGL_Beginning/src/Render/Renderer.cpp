@@ -60,7 +60,7 @@ void Renderer::initialize()
     /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
     
     //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, , 1080, GLFW_DONT_CARE);
-    glfwSwapInterval(1);           
+    glfwSwapInterval(0);           
 
     if (glewInit() != GLEW_OK)
         return;
@@ -199,47 +199,42 @@ bool isFar(int x, int z)
 
 void Renderer::bufferChunks()
 {
-    //BLOCK
-    if(Renderer::blockUpdate)
-    {   
-        //std::cout << "hmm" << std::endl;
-
-        Renderer::blockUpdate = false;
-        RayCast::Info info = BlockEdit::getCurrentRayInfo();
-
-        for (int x = -1; x < 2; x++)
+    if (!ChunkManager::blockUpdateMeshes.empty()) 
+    {
+        int size = ChunkManager::blockUpdateMeshes.size();
+        for(int i = 0; i < size; i++)
         {
-            for (int z = -1; z < 2; z++) {
-                //std::cout << "hmm" << x << z << std::endl;
-                int chunkLocationX = info.block.chunkLocation.first + x;
-                int chunkLocationZ = info.block.chunkLocation.second + z;
-                std::pair<int, int> chunkLocation(chunkLocationX, chunkLocationZ);
-
-                Chunk& chunk = *ChunkManager::loadedChunksMap[chunkLocation];
-                MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, ChunkManager::loadedChunksMap);
-
-                RenderableMesh& drawableMesh = drawableMeshes[chunkLocation];
-                drawableMesh.bufferSize = mesh.mesh.size();
-
-                int32_t* arr = &(mesh.mesh[0]);
-                int bufferSizeBytes = drawableMesh.bufferSize * 4;
-                if(glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY)/2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY/2))          
-                {          
-                    int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
-                    drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
-                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
-                    glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
-                    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
-		        }
-                else
-                {
-                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
-                    glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);
-		        }
-            }
-        }
-    }
+            auto& mesh = ChunkManager::blockUpdateMeshes.front();
+            std::pair<int, int> chunkLocation{ mesh.x, mesh.z };
     
+            if (drawableMeshes.find(chunkLocation) == drawableMeshes.end())
+            {
+                ChunkManager::blockUpdateMeshes.pop();
+                continue;
+			}
+    
+            RenderableMesh& drawableMesh = drawableMeshes.at(chunkLocation);
+            drawableMesh.bufferSize = mesh.mesh.size();
+    
+            int32_t* arr = &(mesh.mesh[0]);
+            int bufferSizeBytes = drawableMesh.bufferSize * 4;
+            //if (glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY) / 2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY / 2))
+            //{
+            //    int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
+            //    drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
+            //    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
+            //    glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
+            //    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
+            //}
+            //else
+            {
+                glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
+                glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);
+            }
+            ChunkManager::blockUpdateMeshes.pop();
+		}
+    }
+
     //VIEW DISTANCE
     for (auto& pair : drawableMeshes)
     {
@@ -263,7 +258,7 @@ void Renderer::bufferChunks()
             if (drawableMeshes.count(incomingChunkLocation))
             {
                 ChunkManager::chunkMeshes.erase(ChunkManager::chunkMeshes.begin());
-                std::cout << "Mesh exists, erasing mesh.\n";
+                //std::cout << "Mesh exists, erasing mesh.\n";
             }
             //Buffer it if incoming chunk is a new chunk
             else
@@ -284,15 +279,18 @@ void Renderer::bufferChunks()
     
                 int32_t* arr = &(frontMesh.mesh[0]);
                 int bufferSizeBytes = drawableMesh.bufferSize * 4;
-                if (glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY) / 2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY / 2))
-                {
-                    int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
-                    drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
-                    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
-                    glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
-                    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
-                }
-                else
+                if(bufferSizeBytes > 40000)
+                    std::cout << bufferSizeBytes << "\n";
+
+                //if (glm::abs(int(drawableMesh.capacity) - int(RenderableMesh::DELTA_CAPACITY) / 2 - bufferSizeBytes) > int(RenderableMesh::DELTA_CAPACITY / 2))
+                //{
+                //    int extraCapacity = (bufferSizeBytes - int(drawableMesh.capacity)) / int(RenderableMesh::DELTA_CAPACITY) + (int(drawableMesh.capacity) < bufferSizeBytes);
+                //    drawableMesh.capacity += RenderableMesh::DELTA_CAPACITY * extraCapacity;
+                //    glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
+                //    glBufferData(GL_ARRAY_BUFFER, drawableMesh.capacity, nullptr, GL_STREAM_DRAW);
+                //    glBufferSubData(GL_ARRAY_BUFFER, 0, bufferSizeBytes, arr);
+                //}
+                //else
                 {
                     glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
                     glBufferSubData(GL_ARRAY_BUFFER, 0, drawableMesh.bufferSize * sizeof(int32_t), arr);

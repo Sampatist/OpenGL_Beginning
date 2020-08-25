@@ -55,7 +55,10 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 		glm::vec3 translate = dir * minStep;
 		length += glm::length(translate);
 		pos += translate;
-
+		if(abs(pos.y - 128) > 128)
+		{
+			break;
+		}
 		if (length > rayLength)
 		{
 			break;
@@ -65,9 +68,9 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 		int rayChunkZ = floor(float(rayBlockZ) / CHUNK_LENGTH);
 		std::pair<int, int> location(rayChunkX, rayChunkZ);
 
-		if (ChunkManager::loadedChunksMap.count(location) == 1)
+
+		if(auto chunk = ChunkManager::lock_getChunk(location)) 
 		{
-			std::shared_ptr<Chunk> chunk = ChunkManager::loadedChunksMap[location];
 			int blockChunkX = rayBlockX % CHUNK_WIDTH;
 			blockChunkX = blockChunkX + (blockChunkX < 0) * CHUNK_WIDTH;
 			int blockChunkZ = rayBlockZ % CHUNK_LENGTH;
@@ -75,7 +78,6 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 
 			if (int blockID = chunk->getBlock(blockChunkX, blockChunkZ, rayBlockY))
 			{
-				//std::cout << "block detected!!!" << std::endl;
 				return { true, hitNormal, {blockID, std::pair<int, int>(rayChunkX, rayChunkZ), blockChunkX, blockChunkZ, rayBlockY} };
 			}
 		}

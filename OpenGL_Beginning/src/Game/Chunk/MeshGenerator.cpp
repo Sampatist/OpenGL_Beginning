@@ -17,6 +17,14 @@ enum class TexCoord
 	bottomLeft, bottomRight, topLeft, topRight
 };
 
+/*
+		31	 27	    23	 19	    15   11	    7    3
+		0000 0000   0000 0000   0000 0000   0000 0000   
+
+		32    30     27			 19			      10            5
+		00    000    00000010    100000000        10000         10000
+		Tx    F      blockID     y                z             x
+*/
 //                               5      5      9       8              3                  2
 static inline int32_t packData(int x, int z, int y, int blockID, FaceDirection dir, TexCoord texCoord)
 {

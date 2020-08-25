@@ -7,6 +7,7 @@ out vec3 normal;
 out vec3 camDir;
 out vec4 fragPosSunViewSpace;
 flat out int id;
+flat out int n;
 
 uniform mat4 u_Model;
 uniform mat4 u_View;
@@ -29,8 +30,9 @@ void main()
 	int x = (data & 0x1F) + u_ChunkOffset.x;
 	int z = ((data >> 5) & 0x1F) + u_ChunkOffset.y;
 	int y = ((data >> 10) & 0x1FF);
+	id = ((data >> 19) & 0xFF);
 	int normalIndex = ((data >> 27) & 0x7);
-	int id = int((data >> 19) & 0xFF);
+	n = normalIndex;
 	normal = NORMALS[normalIndex];
 	vec3 position = vec3(x, y, z);
 	camDir = u_CamPos - position;
@@ -45,6 +47,7 @@ in vec3 normal;
 in vec3 camDir;
 in vec4 fragPosSunViewSpace;
 flat in int id;
+flat in int n;
 
 layout(location = 0) out vec4 color;
 
@@ -107,15 +110,16 @@ void main()
 	vec3 baseColor = vec3(1.0, id / 2.0f, 1.00);
 	if(id == 1)
 	{
-		baseColor = vec3(0.36, 0.88, 0.34);
+		bool is = (n != 5);
+		baseColor = vec3(0.36, 0.88 - (0.5 * float(is)), 0.34);
 	}
 	else if(id == 2)
 	{
-		baseColor = vec3(0.4, 0.2, 0);
+		baseColor = vec3(0.2, 0.141, 0.139);
 	}
-	else if(id == 3) 
+	else if(id == 3)
 	{
-		baseColor = vec3(0.4, 0.4, 0.4);
+		baseColor = vec3(0.3, 0.32, 0.35);
 	}
 
 	vec3 sunColor = vec3(1.0, 1.0, 0.75);

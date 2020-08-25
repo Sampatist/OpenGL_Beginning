@@ -11,7 +11,10 @@
 #include "MeshGenerator.h"
 #include <algorithm>
 #include "pairHash.h"
+#include <queue>
+#include <unordered_set>
 
+static std::unordered_map<std::pair<int, int>, std::shared_ptr<Chunk>, hash_pair> loadedChunksMap;
 
 static int oldCamChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 static int oldCamChunkZ = (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
@@ -26,12 +29,12 @@ static bool isFar(int x, int z, int x2, int z2)
 static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
 	//Unload Chunks O(n)
-	for (auto it = ChunkManager::loadedChunksMap.begin(); it != ChunkManager::loadedChunksMap.end();) {
+	for (auto it = loadedChunksMap.begin(); it != loadedChunksMap.end();) {
 		Chunk& chunk = *it->second;
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
         {
 			ChunkManager::loadedChunksLock.lock();
-            it = ChunkManager::loadedChunksMap.erase(it);
+            it = loadedChunksMap.erase(it);
 			ChunkManager::loadedChunksLock.unlock();
         }
 		else
@@ -50,13 +53,12 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	{
 		std::pair<int, int> chunkLocation(chunkX, chunkZ);
 
-		// possible access violation
-		if (ChunkManager::loadedChunksMap.count(chunkLocation) == 0)
+		if (loadedChunksMap.find(chunkLocation) == loadedChunksMap.end())
 		{
 			// load chunk
-			// possible access violation
-			ChunkManager::loadedChunksMap[chunkLocation] = std::make_shared<Chunk>(chunkX, chunkZ, 0);
+			loadedChunksMap[chunkLocation] = std::make_shared<Chunk>(chunkX, chunkZ, 0);
 		}
+		
 		chunkCount++;
 		chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
 		chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
@@ -70,10 +72,11 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	while(chunkCount < chunkCountLookup[renderDistance])
 	{
 		std::pair<int, int> chunkLocation(chunkX, chunkZ);
-		Chunk& chunk = *ChunkManager::loadedChunksMap.at(chunkLocation);
+		Chunk& chunk = *loadedChunksMap.at(chunkLocation);
 		if (!chunk.isMeshReady)
         {
-            MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, ChunkManager::loadedChunksMap);
+            MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
+
             chunk.isMeshReady = true;
             ChunkManager::meshLock.lock();
             ChunkManager::chunkMeshes.push_back(mesh);
@@ -82,20 +85,87 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 		else
 		{
 			ChunkManager::bufferMapLock.lock();
-			bool exists = ChunkManager::bufferedInfoMap.count(chunkLocation);
-			ChunkManager::bufferMapLock.unlock();
-			if (!exists)
+			if (ChunkManager::bufferedInfoMap.find(chunkLocation) == ChunkManager::bufferedInfoMap.end())
 			{
-				MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, ChunkManager::loadedChunksMap);
+				MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
+				ChunkManager::bufferMapLock.unlock();
+
 				ChunkManager::meshLock.lock();
 				ChunkManager::chunkMeshes.push_back(mesh);
 				ChunkManager::meshLock.unlock();
+			}
+			else
+			{
+				ChunkManager::bufferMapLock.unlock();
 			}
 		}
 		chunkCount++;
 		chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
 		chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
 	}
+}
+
+
+static std::queue<ChunkManager::BlockUpdate> blockUpdates;
+constexpr int BLOCK_UPDATE_LIMIT = 5000;
+
+void ChunkManager::addBlockUpdate(BlockUpdate update)
+{
+	blockUpdates.push(update);
+}
+
+static void reloadUpdatedChunks()
+{
+	static std::unordered_set<std::pair<int, int>, hash_pair> changed;
+
+	// consume block updates
+	for(int i = 0; i < BLOCK_UPDATE_LIMIT; i++)
+	{
+		if (blockUpdates.empty())
+			break;
+		ChunkManager::BlockUpdate& update = blockUpdates.front();
+
+		if (update.x == CHUNK_WIDTH - 1)
+		{
+			changed.insert({ update.chunkLocation.first + 1, update.chunkLocation.second });
+		}
+		else if(update.x == 0)
+		{
+			changed.insert({ update.chunkLocation.first - 1, update.chunkLocation.second });
+		}		
+		if(update.z == CHUNK_LENGTH - 1)
+		{
+			changed.insert({ update.chunkLocation.first, update.chunkLocation.second + 1});
+		}		
+		else if(update.z == 0)
+		{
+			changed.insert({ update.chunkLocation.first, update.chunkLocation.second - 1});
+		}
+
+		ChunkManager::loadedChunksLock.lock();
+		if(loadedChunksMap.find(update.chunkLocation) != loadedChunksMap.end())
+		{
+			loadedChunksMap.at(update.chunkLocation)->setBlock(INDEX(update.x, update.z, update.y), update.blockID);
+			changed.insert(update.chunkLocation);
+		}
+		ChunkManager::loadedChunksLock.unlock();
+
+		blockUpdates.pop();
+	}
+
+	for (auto& location : changed)
+	{
+		ChunkManager::loadedChunksLock.lock();
+		if(loadedChunksMap.find(location) != loadedChunksMap.end())
+		{
+			Chunk& chunk = *loadedChunksMap.at(location);    
+			ChunkManager::blockUpdateMeshes.push(MeshGenerator::generateMesh(chunk, loadedChunksMap));
+		}
+		ChunkManager::loadedChunksLock.unlock();
+	}
+
+	changed.clear();
+
 }
 
 static std::future<void> head;
@@ -107,24 +177,10 @@ void ChunkManager::start()
 	head = std::async(std::launch::async, reloadChunks, oldCamChunkX, oldCamChunkZ);
 }
 
-//std::vector<std::shared_ptr<Chunk>> ChunkManager::getNearChunks()
-//{
-//	std::vector<std::shared_ptr<Chunk>> chunks;
-//	for(int x = -1; x <= 1; x++)
-//	{
-//		for(int z = -1; z <= 1; z++)
-//		{
-//			std::pair<int, int> location(oldCamChunkX + x, oldCamChunkZ + z);
-//			if(loadedChunksMap.count(location) == 1)
-//			{
-//				chunks.push_back(loadedChunksMap[location]);
-//			}
-//		}
-//	}
-//	return chunks;
-//}
 void ChunkManager::update()
 {
+	reloadUpdatedChunks();
+
 	int cameraChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 	int cameraChunkZ = (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
 
@@ -150,3 +206,15 @@ void ChunkManager::update()
 		counter = 0;
 	}
 }
+
+// must lock loadedChunksLock before calling
+std::shared_ptr<Chunk> ChunkManager::lock_getChunk(std::pair<int, int> chunkLocation)
+{
+	if(loadedChunksMap.find(chunkLocation) != loadedChunksMap.end())
+	{
+		return loadedChunksMap.at(chunkLocation);
+	}
+	return nullptr;
+}
+
+

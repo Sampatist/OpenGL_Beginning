@@ -9,10 +9,10 @@
 //std::hash<std::string> TerrainHash;
 //int HashValue = TerrainHash(SEED);
 
-constexpr int OCTAVES = 10;
-constexpr int WATER_LEVEL = 100;
-constexpr float AMPLITUDE = 10;
-constexpr float SCALE = 0.0035f;
+constexpr int OCTAVES = 10;		///10
+constexpr int WATER_LEVEL = 100; //100
+constexpr float AMPLITUDE = 60; //30
+constexpr float SCALE = 0.0035f; //0.0035
 
 static SimplexNoise noise;
 
@@ -41,14 +41,17 @@ std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> TerrainGenerator::g
 			float heightValue = WATER_LEVEL + noiseValue * AMPLITUDE;
 			for (int k = 0; k < CHUNK_HEIGHT; k++)
 			{
-				if(k == (int)heightValue)
+				if(k < heightValue - 10)
+				{
+					blocks[INDEX(i, j, k)] = 3;
+				}
+				else if(k < heightValue - 4)
 				{
 					blocks[INDEX(i, j, k)] = 2;
 				}
-
-				else if(k < heightValue)
+				else if (k < heightValue)
 				{
-					blocks[INDEX(i, j, k)] = 2;
+					blocks[INDEX(i, j, k)] = 1;
 				}
 			}
 		}
