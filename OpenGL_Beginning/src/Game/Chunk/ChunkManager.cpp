@@ -107,7 +107,7 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 
 
 static std::queue<ChunkManager::BlockUpdate> blockUpdates;
-constexpr int BLOCK_UPDATE_LIMIT = 5000;
+constexpr int BLOCK_UPDATE_LIMIT = 995000;
 
 void ChunkManager::addBlockUpdate(BlockUpdate update)
 {

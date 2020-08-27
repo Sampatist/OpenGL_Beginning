@@ -46,7 +46,7 @@ int main(void)
     //std::cout << elapsed_seconds.count()*1000 << std::endl;
     //
     //return 0;
-    //std::this_thread::sleep_for(std::chrono::seconds(10));
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
     Game::initialize();
 

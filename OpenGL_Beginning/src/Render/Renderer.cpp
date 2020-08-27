@@ -14,6 +14,7 @@
 #include "Chunk/pairHash.h"
 #include "PhysicsEngine/rayCast.h"
 #include "Chunk/blockEdit.h"
+#include "glm/gtc/noise.hpp"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -35,6 +36,10 @@ static std::vector<std::pair<int, int>> erasableChunkLocations;
 static unsigned int chunkIndexBufferObject = 0;    
 static unsigned int sunShadowMapFramebuffer = 0;
 static unsigned int backgroundQuadBufferObject = 0; 
+static unsigned int gBuffer = 0;
+static unsigned int shadowTexture;
+static unsigned int gColorTexture;
+static unsigned int gDepthTexture;
    
 void Renderer::initialize() 
 {  
@@ -59,7 +64,7 @@ void Renderer::initialize()
 
     /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
     
-    //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, , 1080, GLFW_DONT_CARE);
+    //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, 1920, 1080, GLFW_DONT_CARE);
     glfwSwapInterval(0);           
 
     if (glewInit() != GLEW_OK)
@@ -93,7 +98,7 @@ void Renderer::initialize()
     /*Initialize background VBO*/
     glGenBuffers(1, &backgroundQuadBufferObject);
     glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
-    int backgroundVertex[18] =
+    float backgroundVertex[18] =
     {
         -1,-1,0,
          1,-1,0,
@@ -144,11 +149,10 @@ void Renderer::initialize()
     glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
 
     // The texture we're going to render to
-    GLuint sunShadowMapTexture;
-    glGenTextures(1, &sunShadowMapTexture);
+    glGenTextures(1, &shadowTexture);
 
     // "Bind" the newly created texture : all future texture functions will modify this texture
-    glBindTexture(GL_TEXTURE_2D, sunShadowMapTexture);
+    glBindTexture(GL_TEXTURE_2D, shadowTexture);
 
     // Give an empty image to OpenGL ( the last "0" )
     glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 4096, 4096, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
@@ -161,14 +165,46 @@ void Renderer::initialize()
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
 
-    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, sunShadowMapTexture, 0);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, shadowTexture, 0);
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, sunShadowMapTexture);
-
     Shaders::getChunkShader()->SetUniform1i("u_SunShadowTexture", 0);
+
+    // deferred rendering
+    glGenFramebuffers(1, &gBuffer);
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+
+    // - color texture
+    glGenTextures(1, &gColorTexture);
+    glBindTexture(GL_TEXTURE_2D, gColorTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16F, 1600, 900, 0, GL_RGBA, GL_FLOAT, NULL);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gColorTexture, 0);
+
+    // - depth texture
+    glGenTextures(1, &gDepthTexture);
+    glBindTexture(GL_TEXTURE_2D, gDepthTexture);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1600, 900, 0, GL_DEPTH_COMPONENT, GL_FLOAT, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, gDepthTexture, 0);
+
+    // - tell OpenGL which color attachments we'll use (of this framebuffer) for rendering 
+    unsigned int attachments[1] = { GL_COLOR_ATTACHMENT0 };
+    glDrawBuffers(1, attachments);
+
+    float scatteringStrength = 5;
+    glm::vec3 waveLengths(700, 530, 440);
+    float scatterR = pow(400 / waveLengths.x, 4) * scatteringStrength;
+    float scatterG = pow(400 / waveLengths.y, 4) * scatteringStrength;
+    float scatterB = pow(400 / waveLengths.z, 4) * scatteringStrength;
+
+    Shaders::getBackgroundQuadShader()->Bind();
+    Shaders::getBackgroundQuadShader()->SetUniform3f("u_scatteringCoefficients", scatterR, scatterG, scatterB);
+    Shaders::getBackgroundQuadShader()->SetUniform1i("u_gColor", 0);
+    Shaders::getBackgroundQuadShader()->SetUniform1i("u_gDepth", 4);
 }
 
 GLFWwindow* const Renderer::getWindow()
@@ -320,13 +356,10 @@ static void drawBackground(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& light
     Shaders::getBackgroundQuadShader()->Bind();
     Shaders::getBackgroundQuadShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
     Shaders::getBackgroundQuadShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
-    Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &ViewFrustum::getDetachedViewMatrix()[0][0]);
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glViewport(0, 0, 1600, 900);
+    Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &viewMatrix[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
-    glClear(GL_DEPTH_BUFFER_BIT);
     glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_INT, GL_FALSE, 3 * sizeof(int), nullptr);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
     glDrawArrays(GL_TRIANGLES, 0, 6);
 }
 
@@ -334,10 +367,6 @@ static void drawShadowMap(glm::mat4x4& svpm)
 {
     Shaders::getSunShadowMapShader()->Bind();
     Shaders::getSunShadowMapShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
-    glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
-    glViewport(0, 0, 4096, 4096);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
 
     for (auto pair : drawableMeshes)
     {
@@ -360,16 +389,12 @@ static void drawShadowMap(glm::mat4x4& svpm)
 
 static void drawChunks(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& lightDir, glm::vec3& lightDirForw, glm::vec3& lightDirBackw, glm::mat4x4& viewMatrix, glm::mat4x4& svpm)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    glEnable(GL_DEPTH_TEST);
-    glViewport(0, 0, 1600, 900);
 
     Shaders::getChunkShader()->Bind();
     Shaders::getChunkShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
     Shaders::getChunkShader()->SetUniform3f("u_lightDirForw", lightDirForw.x, lightDirForw.y, lightDirForw.z);
     Shaders::getChunkShader()->SetUniform3f("u_lightDirBackw", lightDirBackw.x, lightDirBackw.y, lightDirBackw.z);
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &ViewFrustum::getDetachedViewMatrix()[0][0]);
+    Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &viewMatrix[0][0]);
     Shaders::getChunkShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
     Shaders::getChunkShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
 
@@ -395,8 +420,6 @@ static void drawChunks(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& lightDir,
 
 void Renderer::draw()
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    
     //Variables
     glm::vec3 camPos = Camera::GetPosition();
     Sun::SetDirections(Game::getGameTime());
@@ -407,14 +430,32 @@ void Renderer::draw()
     glm::vec3 camDir = Camera::GetCameraAngle();
     glm::mat4x4 viewMatrix = ViewFrustum::getViewMatrix();
    
-    // Render background quad
-    drawBackground(camPos, camDir, lightDir, viewMatrix);
 
     // Render block highlight
 
     // Render to shadow map frame buffer
+    glBindFramebuffer(GL_FRAMEBUFFER, sunShadowMapFramebuffer);
+    glViewport(0, 0, 4096, 4096);
+    glClear(GL_DEPTH_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
     drawShadowMap(svpm);
 
     // Render to the screen
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, shadowTexture);
+    glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
+    glEnable(GL_DEPTH_TEST);
+    glViewport(0, 0, 1600, 900);
     drawChunks(camPos, camDir, lightDir, lightDirF , lightDirB, viewMatrix, svpm);
+
+    // Render background quad
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, gColorTexture);
+    glActiveTexture(GL_TEXTURE4);
+    glBindTexture(GL_TEXTURE_2D, gDepthTexture);
+    glViewport(0, 0, 1600, 900);
+    drawBackground(camPos, camDir, lightDir, viewMatrix);
 }

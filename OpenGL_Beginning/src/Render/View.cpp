@@ -7,8 +7,6 @@
 #include "inputs.h"
 
 static glm::mat4x4 viewMatrix;
-static glm::mat4x4 detachedViewMatrix;
-
 static glm::mat4x4 projectionMatrix;
 static std::vector<glm::vec2> hull;
 
@@ -59,7 +57,6 @@ static std::vector<glm::vec2> calculateHull(std::vector<glm::vec2> points)
 void ViewFrustum::initialize()
 {
     viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
-    detachedViewMatrix = glm::lookAt(Camera::GetDetachedPosition(), Camera::GetDetachedPosition() + Camera::GetDetachedCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
     projectionMatrix = glm::perspective(glm::radians(Settings::fov), 16.0f/9.0f, Settings::ZNEAR, Settings::ZFAR);
     hull.reserve(8);
 }
@@ -67,11 +64,6 @@ void ViewFrustum::initialize()
 glm::mat4 ViewFrustum::getViewMatrix()
 {
 	return viewMatrix;
-}
-
-glm::mat4 ViewFrustum::getDetachedViewMatrix()
-{
-	return detachedViewMatrix;
 }
 
 glm::mat4 ViewFrustum::getProjMatrix()
@@ -212,7 +204,6 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
 void ViewFrustum::update()
 {
 	viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
-    detachedViewMatrix = glm::lookAt(Camera::GetDetachedPosition(), Camera::GetDetachedPosition() + Camera::GetDetachedCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
     hull = calculateHull(calculateCameraPointsAndCastTo2D());
 }
 

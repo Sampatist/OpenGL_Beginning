@@ -188,7 +188,8 @@ void main()
 	vec3 specular = sunSpecular + moonSpecular;
 	
 	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse) + specular;
-	vec3 foggedColor = applyFog(originalColor, length(camDir));
+	//vec3 foggedColor = applyFog(originalColor, length(camDir));
+	vec3 foggedColor = originalColor;
 
 
 	//CrossHair
