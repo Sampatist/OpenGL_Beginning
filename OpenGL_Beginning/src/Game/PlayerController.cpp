@@ -72,58 +72,56 @@ void PlayerController::update()
 			}
 		}
 	}
-	if(mouseRight == 1)
+	if (mouseRight)
 	{
-		//RayCast::Info info = BlockEdit::getCurrentRayInfo();
+		RayCast::Info info = BlockEdit::getCurrentRayInfo();
 
-		//if (info.hit)
+		if (info.hit)
 		{
-			//std::cout << "does info.hit work?" << std::endl;
-			//ChunkManager::loadedChunksLock.lock();
-			//ChunkManager::loadedChunksMap[info.block.chunkLocation]->setBlock(INDEX(info.block.x, info.block.z, info.block.y) + (int)info.faceNormal , info.block.blockID);
-			//ChunkManager::loadedChunksLock.unlock();
-			//Renderer::blockUpdate = true;
+			for (int x = -1; x <= 1; x++)
+			{
+				for (int z = -1; z <= 1; z++)
+				{
+					auto actualBlockX = info.block.x - x * CHUNK_WIDTH;
+					auto actualBlockZ = info.block.z - z * CHUNK_LENGTH;
+					auto actualBlockY = info.block.y;
+					std::pair<int, int> location(info.block.chunkLocation.first + x, info.block.chunkLocation.second + z);
+					for (int k = 0; k < CHUNK_HEIGHT; k++)
+					{
+						for (int j = 0; j < CHUNK_LENGTH; j++)
+						{
+							for (int i = 0; i < CHUNK_WIDTH; i++)
+							{
+								auto a = (actualBlockX - i) * (actualBlockX - i);
+								auto b = (actualBlockY - k) * (actualBlockY - k);
+								auto c = (actualBlockZ - j) * (actualBlockZ - j);
+								if (a + b + c < 100)
+								{
+									ChunkManager::addBlockUpdate({ location, i, j, k, 3});
+								}
+							}
+						}
+					}
+				}
+			}
 		}
-
-		mouseX += deltaMouseX * SENSITIVITY;
-		mouseY += deltaMouseY * SENSITIVITY;
-		mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
-
-		Camera::setDetachedAngle(mouseY, mouseX);
-
-		right_vector = glm::normalize(glm::cross(Camera::GetDetachedCameraAngle(), up_vector));
-		forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
-
-		glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
-
-		Camera::setDetachedPosition(
-			Camera::GetDetachedPosition() + 
-			(glm::abs(glm::length(translate)) ? 
-			 glm::normalize(translate) : 
-			 glm::vec3(0.0f)) * 
-			 SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
 	}
-	else
-	{
-		mouseX += deltaMouseX * SENSITIVITY;
-		mouseY += deltaMouseY * SENSITIVITY;
-		mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
+	mouseX += deltaMouseX * SENSITIVITY;
+	mouseY += deltaMouseY * SENSITIVITY;
+	mouseY = std::clamp(mouseY, YAW_ANGLE_LOWER_LIMIT, YAW_ANGLE_UPPER_LIMIT);
 
-		Camera::setAngle(mouseY, mouseX);
+	Camera::setAngle(mouseY, mouseX);
 
-		right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
-		forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
+	right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
+	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
 
-		glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
+	glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
 
-		Camera::setPosition(
-			Camera::GetPosition() + 
-			(glm::abs(glm::length(translate)) ? 
-			 glm::normalize(translate) : 
-			 glm::vec3(0.0f)) * 
-			 SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
+	Camera::setPosition(
+		Camera::GetPosition() +
+		(glm::abs(glm::length(translate)) ?
+			glm::normalize(translate) :
+			glm::vec3(0.0f)) *
+		SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
 
-		Camera::setDetachedPosition(Camera::GetPosition());
-		Camera::setDetachedAngle(mouseY, mouseX);
-	}
 }

@@ -68,7 +68,6 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 		int rayChunkZ = floor(float(rayBlockZ) / CHUNK_LENGTH);
 		std::pair<int, int> location(rayChunkX, rayChunkZ);
 
-
 		if(auto chunk = ChunkManager::lock_getChunk(location)) 
 		{
 			int blockChunkX = rayBlockX % CHUNK_WIDTH;

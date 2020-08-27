@@ -10,7 +10,6 @@ namespace ViewFrustum
 	void initialize();
 	void update();
 	glm::mat4 getViewMatrix();
-	glm::mat4 getDetachedViewMatrix();
 	glm::mat4 getProjMatrix();
 	bool contains2D(glm::vec2 pos);
 }
