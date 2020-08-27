@@ -4,15 +4,24 @@
 layout(location = 0) in vec3 position;
 
 out vec3 viewRay;
+out vec3 rotatedSkyBoxSampleVector;
 
 uniform mat4 u_projMatrix;
 uniform mat4 u_viewMatrix;
+uniform vec3 u_lightDir;
+uniform vec3 u_SunBinormal;
 
 void main()
 {
 	vec4 viewSpaceCoord = inverse(u_projMatrix) * vec4(position.xy, -1.0f, 1.0f);
 	viewSpaceCoord = vec4(viewSpaceCoord.xy, -1.0f, 0.0f);
 	viewRay = (inverse(u_viewMatrix) * viewSpaceCoord).xyz;
+	vec3 nViewRay = normalize(viewRay);
+
+	float theta = float(u_lightDir.x < 0) * 2 * acos(-1.0f) + acos(dot(u_lightDir, vec3(0,1,0))) * (float(u_lightDir.x < 0) * -2.0f + 1.0f);
+
+	rotatedSkyBoxSampleVector = nViewRay * cos(theta) + cross(-u_SunBinormal, nViewRay) * sin(theta) + u_SunBinormal * (dot(u_SunBinormal, nViewRay) * (1- cos(theta)));
+
 	gl_Position = vec4(position, 1.0f);
 };
 
@@ -20,6 +29,7 @@ void main()
 #version 330 core
 
 in vec3 viewRay;
+in vec3 rotatedSkyBoxSampleVector;
 
 layout(location = 0) out vec4 color;
 
@@ -27,13 +37,14 @@ uniform vec3 u_lightDir;
 uniform vec3 u_CamPos;
 uniform sampler2D u_gColor;
 uniform sampler2D u_gDepth;
+uniform samplerCube u_StarTexture;
 uniform vec3 u_scatteringCoefficients;
 
 const float PI = 3.1418;
 const int numInScatteringPoints = 10;
-const int numOpticalDepthPoints = 2;
+const int numOpticalDepthPoints = 10;
 const float atmosphereRadius = 10400;
-const float planetRadius = 9390;
+const float planetRadius = 9000;
 const float densityFalloff = 7;
 vec3 planetCentre = vec3(0);
 vec3 dirToSun = vec3(0);
@@ -109,12 +120,13 @@ vec3 calculateLight(vec3 rayOrigin, vec3 rayDir, float rayLength, vec3 originalC
 void main()
 {
 	vec3 nViewRay = normalize(viewRay);
-
 	vec2 texCoord = vec2(gl_FragCoord.x / 1600, gl_FragCoord.y / 900);
 	vec4 texColor = texture(u_gColor, texCoord);
 	float z_b = texture(u_gDepth, texCoord).r;
 	float z_n = 2.0 * z_b - 1.0;
 	float z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
+
+	texColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * clamp((1 - u_lightDir.y * 5.0f), 0.0f, 1.0f);
 
 	vec3 m = nViewRay - u_lightDir;
 	vec3 d = m * 2000 + u_lightDir;
@@ -124,21 +136,30 @@ void main()
 	dirToSun = u_lightDir;
 
 	vec3 rayOrigin = u_CamPos;
-	vec3 rayDir = normalize(viewRay);
 	planetCentre = vec3(u_CamPos.x, -10000, u_CamPos.z);
-	vec2 hitInfo = raySphere(planetCentre, atmosphereRadius, rayOrigin, rayDir);
+	vec2 hitInfo = raySphere(planetCentre, atmosphereRadius, rayOrigin, nViewRay);
 	
 	float dstToAtmosphere = hitInfo.x;
 	float dstThroughAtmosphere = min(hitInfo.y, z_e - dstToAtmosphere);
 
+	vec4 finalColor;
+
 	if (dstThroughAtmosphere > 0)
 	{
-		vec3 pointInAtmosphere = rayOrigin + rayDir * dstToAtmosphere;
-		vec3 light = calculateLight(pointInAtmosphere, rayDir, dstThroughAtmosphere, texColor.xyz);
-		color = vec4(light, 0) + sun + sunOuter;
+		vec3 pointInAtmosphere = rayOrigin + nViewRay * dstToAtmosphere;
+		vec3 light = calculateLight(pointInAtmosphere, nViewRay, dstThroughAtmosphere, texColor.xyz);
+		finalColor = vec4(light, 0) + sun + sunOuter;
 	}
 	else
 	{
-		color = texColor + sun + sunOuter;
+		finalColor = texColor + sun + sunOuter;
 	}
+
+	//CrossHair
+	vec2 W = vec2(1600, 900);
+	if ((gl_FragCoord.x > W.x/2 - 3 && gl_FragCoord.x < W.x/2 + 3 && gl_FragCoord.y > W.y/2 - 14 && gl_FragCoord.y < W.y / 2 + 14) ^^
+		(gl_FragCoord.x > W.x/2 - 14 && gl_FragCoord.x < W.x/2 + 14 && gl_FragCoord.y > W.y / 2 - 3 && gl_FragCoord.y < W.y / 2 + 3))
+		finalColor = vec4(1.0f) - finalColor;
+
+	color = finalColor;
 };

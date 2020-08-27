@@ -5,9 +5,13 @@
 #include <glm/mat4x4.hpp>
 
 static glm::vec3 sunDir(normalize(glm::vec3(sin(Game::getGameTime()), cos(Game::getGameTime()), sin(Game::getGameTime()) * 0.4)));
+static glm::vec3 sunDirDerivative(glm::vec3(cos(Game::getGameTime()), -sin(Game::getGameTime()), cos(Game::getGameTime()) * 0.4));
+static glm::vec3 sunDirSecondDerivative(glm::vec3(-sin(Game::getGameTime()), -cos(Game::getGameTime()), -sin(Game::getGameTime()) * 0.4));
+static glm::vec3 binormalVectorOfSun(normalize(glm::cross(sunDirDerivative, sunDirSecondDerivative)));
 const float sunRadius = 0.3f;
 static glm::vec3 sunDirForw(normalize(glm::vec3(sin(Game::getGameTime() + sunRadius), cos(Game::getGameTime() + sunRadius), sin(Game::getGameTime() + sunRadius) * 0.4)));
 static glm::vec3 sunDirBackw(normalize(glm::vec3(sin(Game::getGameTime() - sunRadius), cos(Game::getGameTime() - sunRadius), sin(Game::getGameTime() - sunRadius) * 0.4)));
+
 
 glm::vec3 Sun::GetDirection()
 {
@@ -22,6 +26,11 @@ glm::vec3 Sun::GetDirectionForw()
 glm::vec3 Sun::GetDirectionBackw()
 {
     return sunDirBackw;
+}
+
+glm::vec3 Sun::GetBinormal()
+{
+    return binormalVectorOfSun;
 }
 
 void Sun::SetDirection(float time)

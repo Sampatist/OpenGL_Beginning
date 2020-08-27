@@ -5,7 +5,7 @@
 #include "Chunk/blockEdit.h"
 #include "View.h"
 
-static float GameTime = 0.2f;
+static float GameTime = 0.3f;
 
 void Game::initialize()
 {
@@ -18,7 +18,7 @@ void Game::initialize()
 
 void Game::run()
 {
-	GameTime += 0.001f;
+	GameTime += 0.0005f;
 	inputManager::update();
 	
 	BlockEdit::update();

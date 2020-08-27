@@ -15,6 +15,7 @@
 #include "PhysicsEngine/rayCast.h"
 #include "Chunk/blockEdit.h"
 #include "glm/gtc/noise.hpp"
+#include "stb_image/stb_image.h"
 
 static void GLAPIENTRY
 MessageCallback(GLenum source,
@@ -40,6 +41,7 @@ static unsigned int gBuffer = 0;
 static unsigned int shadowTexture;
 static unsigned int gColorTexture;
 static unsigned int gDepthTexture;
+static unsigned int skyBoxTexture;
    
 void Renderer::initialize() 
 {  
@@ -65,7 +67,7 @@ void Renderer::initialize()
     /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
     
     //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, 1920, 1080, GLFW_DONT_CARE);
-    glfwSwapInterval(0);           
+    glfwSwapInterval(1);           
 
     if (glewInit() != GLEW_OK)
         return;
@@ -205,6 +207,49 @@ void Renderer::initialize()
     Shaders::getBackgroundQuadShader()->SetUniform3f("u_scatteringCoefficients", scatterR, scatterG, scatterB);
     Shaders::getBackgroundQuadShader()->SetUniform1i("u_gColor", 0);
     Shaders::getBackgroundQuadShader()->SetUniform1i("u_gDepth", 4);
+    Shaders::getBackgroundQuadShader()->SetUniform1i("u_StarTexture", 1);
+    auto binormal = Sun::GetBinormal();
+    Shaders::getBackgroundQuadShader()->SetUniform3f("u_SunBinormal", binormal.x, binormal.y, binormal.z);
+
+    // - skyBox texture
+    glGenTextures(1, &skyBoxTexture);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
+
+    stbi_set_flip_vertically_on_load(true);
+
+    std::vector<std::string> textures_faces = {
+        "res/skybox/Faces/right.png",
+        "res/skybox/Faces/left.png",
+        "res/skybox/Faces/bottom.png",
+        "res/skybox/Faces/top.png",
+        "res/skybox/Faces/front.png",
+        "res/skybox/Faces/back.png",
+    };
+
+    int width = 1024, height = 1024, nrChannels = 4;
+    unsigned char *data;  
+    for(unsigned int i = 0; i < textures_faces.size(); i++)
+    {
+        data = stbi_load(textures_faces[i].c_str(), &width, &height, &nrChannels, 0);
+        if (data)
+        {
+            glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 
+                         0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data
+            );
+            stbi_image_free(data);
+        }
+        else
+        {
+            std::cout << "Cubemap tex failed to load at path: " << textures_faces[i] << std::endl;
+            stbi_image_free(data);
+        }
+    }
+
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);  
 }
 
 GLFWwindow* const Renderer::getWindow()
@@ -456,6 +501,8 @@ void Renderer::draw()
     glBindTexture(GL_TEXTURE_2D, gColorTexture);
     glActiveTexture(GL_TEXTURE4);
     glBindTexture(GL_TEXTURE_2D, gDepthTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_CUBE_MAP, skyBoxTexture);
     glViewport(0, 0, 1600, 900);
     drawBackground(camPos, camDir, lightDir, viewMatrix);
 }

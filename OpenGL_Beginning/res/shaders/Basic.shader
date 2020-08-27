@@ -186,16 +186,8 @@ void main()
 	vec3 moonSpecular = specularStrenght * moonSpec * moonLightColor * moonEffect;
 	
 	vec3 specular = sunSpecular + moonSpecular;
-	
+
 	vec3 originalColor = baseColor * (ambient + global_illumination + diffuse) + specular;
-	//vec3 foggedColor = applyFog(originalColor, length(camDir));
-	vec3 foggedColor = originalColor;
 
-
-	//CrossHair
-	vec2 W = vec2(1600, 900);
-	if ((gl_FragCoord.x > W.x/2 - 3 && gl_FragCoord.x < W.x/2 + 3 && gl_FragCoord.y > W.y/2 - 14 && gl_FragCoord.y < W.y / 2 + 14) ^^
-		(gl_FragCoord.x > W.x/2 - 14 && gl_FragCoord.x < W.x/2 + 14 && gl_FragCoord.y > W.y / 2 - 3 && gl_FragCoord.y < W.y / 2 + 3))
-		foggedColor = vec3(1.0f) - foggedColor;
-	color = vec4(foggedColor, 1.0f);
+	color = vec4(originalColor, 1.0f);
 };
