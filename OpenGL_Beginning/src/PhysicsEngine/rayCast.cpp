@@ -77,7 +77,7 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 
 			if (int blockID = chunk->getBlock(blockChunkX, blockChunkZ, rayBlockY))
 			{
-				return { true, hitNormal, {blockID, std::pair<int, int>(rayChunkX, rayChunkZ), blockChunkX, blockChunkZ, rayBlockY} };
+				return { true, length, hitNormal, {blockID, std::pair<int, int>(rayChunkX, rayChunkZ), blockChunkX, blockChunkZ, rayBlockY} };
 			}
 		}
 		else
@@ -85,5 +85,5 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 			break;
 		}
 	}
-	return { false, glm::vec3(0), {0, std::pair<int, int>(0, 0), 0, 0, 0} };
+	return { false, 0, glm::vec3(0), {0, std::pair<int, int>(0, 0), 0, 0, 0} };
 }

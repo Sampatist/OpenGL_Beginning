@@ -14,6 +14,7 @@ namespace RayCast
 			int x, z, y;
 		};
 		bool hit;
+		float rayLenght;
 		glm::vec3 faceNormal;
 		Block block;
 	};

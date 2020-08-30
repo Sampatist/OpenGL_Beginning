@@ -11,7 +11,7 @@
 
 constexpr int OCTAVES = 10;		///10
 constexpr int WATER_LEVEL = 100; //100
-constexpr float AMPLITUDE = 60; //30
+constexpr float AMPLITUDE = 30; //30
 constexpr float SCALE = 0.0035f; //0.0035
 
 static SimplexNoise noise;

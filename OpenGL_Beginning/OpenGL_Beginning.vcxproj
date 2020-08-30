@@ -30,6 +30,7 @@
     <ClCompile Include="src\Game\Game.cpp" />
     <ClCompile Include="src\Game\inputs.cpp" />
     <ClCompile Include="src\Game\Settings.cpp" />
+    <ClCompile Include="src\PhysicsEngine\PhysicalObjects.cpp" />
     <ClCompile Include="src\PhysicsEngine\rayCast.cpp" />
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\input_handlers\KeyboardEventHandler.cpp" />

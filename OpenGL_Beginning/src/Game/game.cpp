@@ -4,8 +4,9 @@
 #include "Renderer.h"
 #include "Chunk/blockEdit.h"
 #include "View.h"
+#include "PhysicsEngine/PhysicalObjects.h"
 
-static float GameTime = 0.3f;
+static float GameTime = -1.8f;
 
 void Game::initialize()
 {
@@ -23,6 +24,7 @@ void Game::run()
 	
 	BlockEdit::update();
 	PlayerController::update();
+	Player::updatePos();
 
 	ViewFrustum::update();
 

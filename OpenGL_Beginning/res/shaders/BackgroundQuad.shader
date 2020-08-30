@@ -51,6 +51,8 @@ vec3 dirToSun = vec3(0);
 const float zNear = 0.1f;
 const float zFar = 900.0f;
 
+const float minColorStars = 0.1f;
+
 vec2 raySphere(vec3 sphereCentre, float sphereRadius, vec3 rayOrigin, vec3 rayDir)
 {
 	vec3 offset = rayOrigin - sphereCentre;
@@ -126,8 +128,11 @@ void main()
 	float z_n = 2.0 * z_b - 1.0;
 	float z_e = 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
 
-	texColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * clamp((1 - u_lightDir.y * 5.0f), 0.0f, 1.0f);
-
+	//texColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * 
+	//	clamp((0.1f - u_lightDir.y), 0.0f, 1.0f);
+	//clamp((0.2f - u_lightDir.y) * (0.5f - pow(dot(nViewRay, u_lightDir), 3) * 0.5f), 0.0f, 1.0f);  Makes a little bit more sense
+	//clamp((0.1f - u_lightDir.y), 0.0f, 1.0f);  Makes sense
+	
 	vec3 m = nViewRay - u_lightDir;
 	vec3 d = m * 2000 + u_lightDir;
 	vec3 d2 = m * 50 + u_lightDir;
@@ -149,11 +154,29 @@ void main()
 		vec3 pointInAtmosphere = rayOrigin + nViewRay * dstToAtmosphere;
 		vec3 light = calculateLight(pointInAtmosphere, nViewRay, dstThroughAtmosphere, texColor.xyz);
 		finalColor = vec4(light, 0) + sun + sunOuter;
+		
+	
+		//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * clamp((0.05f - u_lightDir.y), 0.0f, 1.0f); even this works great
 	}
 	else
 	{
 		finalColor = texColor + sun + sunOuter;
 	}
+	//efsane bu yöntem... performans açýsýndan da iyi
+	if(texture(u_gColor, texCoord) == 0)
+		finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector)  * clamp(1 - (length(finalColor) * (1.0f/minColorStars)), 0.0f, 1.0f); // looks great but still problematic since it also works for blocks I mean it wont be a problem since there is ambient light everywhere but it is edgy
+	//Big or small braaaiiinn???
+	//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * float(length(finalColor) < 0.1f); wowwwww looks lame as fuck 
+	//Lets try again
+	//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * float(length(finalColor) < 0.1f) * clamp((0.1f - u_lightDir.y), 0.0f, 1.0f); kinda worked but still weird
+	//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * float(length(finalColor) < 0.1f) * clamp((0.05f- u_lightDir.y), 0.0f, 1.0f); lowering starting point made it better but I think thats not the way
+	//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector)  * clamp((0.05f - u_lightDir.y), 0.0f, 1.0f); hmm this is risky ....
+	//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * (float(length(finalColor) < 0.01f) + float(length(finalColor) < 0.025f) + float(length(finalColor) < 0.05f) + float(length(finalColor) < 0.1f)) / 4 * clamp((0.05f - u_lightDir.y), 0.0f, 1.0f); this really smoothened out it by a lot
+	
+	//best one for now
+	//finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector) * float(z_e > 900) * (float(length(finalColor) < 0.01f) + float(length(finalColor) < 0.02f) + float(length(finalColor) < 0.03f) + float(length(finalColor) < 0.04f) + float(length(finalColor) < 0.05f) + float(length(finalColor) < 0.06f) + float(length(finalColor) < 0.07f) + float(length(finalColor) < 0.08f) + float(length(finalColor) < 0.09f) + float(length(finalColor) < 0.1f)) / 10 * clamp((0.05f - u_lightDir.y), 0.0f, 1.0f); // looks great but still problematic since it also works for blocks I mean it wont be a problem since there is ambient light everywhere but it is edgy
+	
+
 
 	//CrossHair
 	vec2 W = vec2(1600, 900);

@@ -22,6 +22,7 @@ static	glm::vec3 forward_vector(0.0f);
 static float mouseX = 0.0f;
 static float mouseY = 0.0f;
 
+
 void PlayerController::update()
 {
 	//CAMERA
@@ -116,12 +117,5 @@ void PlayerController::update()
 	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
 
 	glm::vec3 translate = right_vector * right + forward_vector * forward + up_vector * fly;
-
-	Camera::setPosition(
-		Camera::GetPosition() +
-		(glm::abs(glm::length(translate)) ?
-			glm::normalize(translate) :
-			glm::vec3(0.0f)) *
-		SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f));
 
 }
