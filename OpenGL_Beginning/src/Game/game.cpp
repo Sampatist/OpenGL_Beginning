@@ -24,7 +24,6 @@ void Game::run()
 	
 	BlockEdit::update();
 	PlayerController::update();
-	Player::updatePos();
 
 	ViewFrustum::update();
 

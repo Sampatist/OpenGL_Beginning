@@ -16,7 +16,7 @@ namespace ChunkManager
 		int blockID;
 	};
 	
-	std::shared_ptr<Chunk> lock_getChunk(std::pair<int, int> chunkLocation);
+	Chunk* lock_getChunk(std::pair<int, int> chunkLocation);
 	void addBlockUpdate(BlockUpdate update);
 
 	inline std::mutex loadedChunksLock;

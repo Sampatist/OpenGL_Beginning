@@ -71,7 +71,7 @@ void Player::calcAcceleration()
 	glm::vec3 accelerationInfo = right_vector * right + forward_vector * forward + up_vector * jump;
 	glm::vec3 unitAcceleration = glm::abs(glm::length(accelerationInfo)) ? glm::normalize(accelerationInfo) : glm::vec3(0.0f);
 
-	acceleration = unitAcceleration * SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f) - up_vector * 0.3f;
+	acceleration = unitAcceleration * SPEED * (shift == 1.0f ? SPEED_MULTIPLIER : 1.0f) - up_vector * 0.0f;
 }
 
 void Player::calcVelocity()
@@ -92,7 +92,7 @@ void Player::calcVelocity()
 		{
 			if (glm::length(velocity_x) < 0.5f)
 				velocity_x = glm::vec3(0.0f);
-			float newVelocityLength = collisionInfoHead.rayLenght - 0.5f;
+			float newVelocityLength = collisionInfoHead.rayLength - 0.5f;
 			std::cout << newVelocityLength << std::endl;
 			velocity_x = unitVelocity_x * (newVelocityLength);
 		}
@@ -109,7 +109,7 @@ void Player::calcVelocity()
 		{
 			if (glm::length(velocity_z) < 0.5f)
 				velocity_z = glm::vec3(0.0f);
-			float newVelocityLength = collisionInfoHead.rayLenght - 0.5f;
+			float newVelocityLength = collisionInfoHead.rayLength - 0.5f;
 			std::cout << newVelocityLength << std::endl;
 			velocity_z = unitVelocity_z * (newVelocityLength);
 		}
@@ -126,9 +126,9 @@ void Player::calcVelocity()
 		{
 			if (glm::length(velocity_y) < 0.5f)
 				velocity_y = glm::vec3(0.0f);
-			std::cout << collisionInfoHead.rayLenght << std::endl;
-			float newVelocityLength = collisionInfoHead.rayLenght - 0.5f;
-			std::cout << newVelocityLength << std::endl;
+			//std::cout << collisionInfoHead.rayLenght << std::endl;
+			float newVelocityLength = collisionInfoHead.rayLength - 0.5f;
+			//std::cout << newVelocityLength << std::endl;
 			velocity_y = unitVelocity_y * (newVelocityLength);
 		}
 	}
@@ -179,9 +179,9 @@ void Player::updatePos()
 	calcAcceleration();
 	calcVelocity();
 	CalculateNewPosition();
-	std::cout << "acceleration: " << acceleration.x << " " << acceleration.z << " " << acceleration.y << " " << std::endl;
+	//std::cout << "acceleration: " << acceleration.x << " " << acceleration.z << " " << acceleration.y << " " << std::endl;
 
-	std::cout << "velocity: " << velocity.x << " " << velocity.z << " " << velocity.y << " " << std::endl;
+	//std::cout << "velocity: " << velocity.x << " " << velocity.z << " " << velocity.y << " " << std::endl;
 }
 
 void Player::ChangeCameraPosAndAngle()

@@ -31,7 +31,7 @@ static inline int32_t packData(int x, int z, int y, int blockID, FaceDirection d
 	return x | (z << 5) | (y << 10) | (blockID << 19) | ((int)dir << 27) | ((int)dir << 30);
 }
 
-MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, std::shared_ptr<Chunk>, hash_pair>& loadedChunksMap)
+MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unordered_map<std::pair<int, int>, std::unique_ptr<Chunk>, hash_pair>& loadedChunksMap)
 {
 	std::pair<int, int> posXpair(chunk.getX() + 1, chunk.getZ());
 	std::pair<int, int> negXpair(chunk.getX() - 1, chunk.getZ());

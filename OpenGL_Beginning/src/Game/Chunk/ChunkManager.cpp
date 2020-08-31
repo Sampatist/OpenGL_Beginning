@@ -14,7 +14,7 @@
 #include <queue>
 #include <unordered_set>
 
-static std::unordered_map<std::pair<int, int>, std::shared_ptr<Chunk>, hash_pair> loadedChunksMap;
+static std::unordered_map<std::pair<int, int>, std::unique_ptr<Chunk>, hash_pair> loadedChunksMap;
 
 static int oldCamChunkX = (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 static int oldCamChunkZ = (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
@@ -56,7 +56,7 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 		if (loadedChunksMap.find(chunkLocation) == loadedChunksMap.end())
 		{
 			// load chunk
-			loadedChunksMap[chunkLocation] = std::make_shared<Chunk>(chunkX, chunkZ, 0);
+			loadedChunksMap[chunkLocation] = std::make_unique<Chunk>(chunkX, chunkZ, 0);
 		}
 		
 		chunkCount++;
@@ -208,11 +208,11 @@ void ChunkManager::update()
 }
 
 // must lock loadedChunksLock before calling
-std::shared_ptr<Chunk> ChunkManager::lock_getChunk(std::pair<int, int> chunkLocation)
+Chunk* ChunkManager::lock_getChunk(std::pair<int, int> chunkLocation)
 {
 	if(loadedChunksMap.find(chunkLocation) != loadedChunksMap.end())
 	{
-		return loadedChunksMap.at(chunkLocation);
+		return loadedChunksMap.at(chunkLocation).get();
 	}
 	return nullptr;
 }
