@@ -3,9 +3,10 @@
 #include "rayCast.h"
 #include <array>
 #include "glm/trigonometric.hpp"
+#include "Swept_AABB.h"
 
 constexpr float dragCoef = 0.05f;
-const glm::vec3 gravity(0.0f, -1.8f, 0.0f);
+const glm::vec3 gravity(0.0f, -1.0f, 0.0f);
 //TODO
 
 void PhysicsObject::update()
@@ -16,6 +17,10 @@ void PhysicsObject::update()
 
 	velocity += acceleration;
 	float velocityLength = glm::length(velocity);
+
+
+	//Block pos, w,h,d; 
+
 
 	if (velocityLength > 0)
 	{
@@ -80,4 +85,18 @@ void PhysicsObject::addForce(glm::vec3 force)
 glm::vec3 PhysicsObject::getPosition() const
 {
 	return position;
+}
+
+glm::vec3 PhysicsObject::getVelocity() const
+{
+	return velocity;
+}
+
+HitBox PhysicsObject::getHitBox() const
+{
+	HitBox realHitBox = hitbox;
+	realHitBox.x += position.x + hitbox.w / 2;
+	realHitBox.y += position.y + hitbox.h / 2;
+	realHitBox.z += position.z + hitbox.d / 2;
+	return realHitBox;
 }

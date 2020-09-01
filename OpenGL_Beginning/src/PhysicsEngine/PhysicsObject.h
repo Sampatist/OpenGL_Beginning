@@ -6,18 +6,7 @@ struct HitBox
 {
 	std::array<glm::vec3, 8> points;
 
-	////top
-	//glm::vec3 posXposYposZ;
-	//glm::vec3 posXposYnegZ;
-	//glm::vec3 negXposYposZ;
-	//glm::vec3 negXposYnegZ;
-	////bottom
-	//glm::vec3 posXnegYposZ;
-	//glm::vec3 posXnegYnegZ;
-	//glm::vec3 negXnegYposZ;
-	//glm::vec3 negXnegYnegZ;
-	 
-	HitBox(float width, float length, float height)
+	HitBox(float width, float height, float depth)
 	{
 		points[0] = glm::vec3(  width / 2,  height / 2,  length / 2 );  // posXposYposZ
 		points[1] = glm::vec3(  width / 2,  height / 2, -length / 2 );	// posXposYnegZ
@@ -29,6 +18,15 @@ struct HitBox
 		points[6] = glm::vec3( -width / 2, -height / 2,  length / 2 );	// negXnegYposZ
 		points[7] = glm::vec3( -width / 2, -height / 2, -length / 2 );	// negXnegYnegZ
 	}	
+};
+
+struct HitBox
+{
+	// position of negx - negy - negz corner 
+	float x, y, z;
+
+	// Dimensions
+	float w, h, d;
 };
 
 class PhysicsObject
@@ -48,4 +46,6 @@ public:
 	void update();
 	void addForce(glm::vec3 force);
 	glm::vec3 getPosition() const;
+	glm::vec3 getVelocity() const;
+	HitBox getHitBox() const;
 };

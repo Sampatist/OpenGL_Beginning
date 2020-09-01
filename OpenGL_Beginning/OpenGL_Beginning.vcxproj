@@ -33,6 +33,7 @@
     <ClCompile Include="src\PhysicsEngine\PhysicsObject.cpp" />
     <ClCompile Include="src\PhysicsEngine\PhysicalObjects.cpp" />
     <ClCompile Include="src\PhysicsEngine\rayCast.cpp" />
+    <ClCompile Include="src\PhysicsEngine\Swept_AABB.cpp" />
     <ClCompile Include="src\Render\IndexBuffer.cpp" />
     <ClCompile Include="src\input_handlers\KeyboardEventHandler.cpp" />
     <ClCompile Include="src\input_handlers\MouseEventHandler.cpp" />
@@ -203,6 +204,7 @@
     <ClInclude Include="src\PhysicsEngine\PhysicsObject.h" />
     <ClInclude Include="src\PhysicsEngine\PhysicalObjects.h" />
     <ClInclude Include="src\PhysicsEngine\rayCast.h" />
+    <ClInclude Include="src\PhysicsEngine\Swept_AABB.h" />
     <ClInclude Include="src\Render\IndexBuffer.h" />
     <ClInclude Include="src\input_handlers\KeyboardEventHandler.h" />
     <ClInclude Include="src\input_handlers\MouseEventHandler.h" />

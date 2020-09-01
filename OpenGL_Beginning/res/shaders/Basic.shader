@@ -121,6 +121,10 @@ void main()
 	{
 		baseColor = vec3(0.3, 0.32, 0.35);
 	}
+	else if (id == 4)
+	{
+		baseColor = vec3(0.3, 0.32, 0.75);
+	}
 
 	vec3 sunColor = vec3(1.0, 1.0, 0.75);
 	vec3 moonLightColor = vec3(0.006, 0.02, 0.07);
