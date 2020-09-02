@@ -23,7 +23,7 @@ static	glm::vec3 forward_vector(0.0f);
 static float mouseX = 0.0f;
 static float mouseY = 0.0f;
 
-static PhysicsObject player(Camera::GetPosition(), 50, {0.7f, 0.7f, 0.8f});
+static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f});
 
 
 void PlayerController::update()
@@ -119,19 +119,9 @@ void PlayerController::update()
 	right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
 	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
 
-	glm::vec3 force = right_vector * right + forward_vector * forward;
+	glm::vec3 force = right_vector * right + forward_vector * forward + up_vector * fly;
 
-	static bool jumped = false;
-	if(fly == 1 && !jumped)
-	{
-		force += up_vector * 30.0f;
-		jumped = true;
-	}
-	else if(fly == 0 && jumped)
-	{
-		jumped = false;
-	}
 	player.addForce(force);
 	player.update();
-	Camera::setPosition(player.getPosition());
+	Camera::setPosition(player.getPosition() + glm::vec3(0.0f, 8.0f, 0.0f));
 }

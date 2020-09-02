@@ -1,4 +1,6 @@
 #pragma once
+#include "glm/vec3.hpp"
+#include "PhysicsObject.h"
 
 struct CollisionInfo
 {
@@ -6,4 +8,4 @@ struct CollisionInfo
 	glm::vec3 normal;
 };
 
-CollisionInfo SweptAABB(PhysicsObject& b1, HitBox& b2);
+CollisionInfo SweptAABB(const PhysicsObject& b1, const HitBox& b2);

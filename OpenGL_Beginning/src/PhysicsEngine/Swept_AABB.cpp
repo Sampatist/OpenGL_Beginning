@@ -2,9 +2,10 @@
 #include <limits>
 #include <algorithm>
 #include "PhysicsObject.h"
+#include <iostream>
 
 // döndü = collision time , normal info
-CollisionInfo SweptAABB(PhysicsObject& dynamic, HitBox& staTHICC)
+CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 {
 	float xDisEntry, yDisEntry, zDisEntry;
 	float xDisExit,  yDisExit,  zDisExit;
@@ -37,8 +38,8 @@ CollisionInfo SweptAABB(PhysicsObject& dynamic, HitBox& staTHICC)
 
 	if (v.z > 0.0f)
 	{
-		zDisEntry = staTHICC.z - (dynaMHICC.y + dynaMHICC.h);
-		zDisExit  = (staTHICC.z + staTHICC.h) - dynaMHICC.y;
+		zDisEntry = staTHICC.z - (dynaMHICC.z + dynaMHICC.d);
+		zDisExit  = (staTHICC.z + staTHICC.d) - dynaMHICC.z;
 	}
 	else
 	{
@@ -86,12 +87,10 @@ CollisionInfo SweptAABB(PhysicsObject& dynamic, HitBox& staTHICC)
 
 	//calculate last entry time and first exit time
 
-	float entryTime = std::max(xEntry,    yEntry);
-	float entryTime = std::max(zEntry, entryTime);
+	float entryTime = std::max({ xEntry, yEntry, zEntry });
 
-	float exitTime =  std::min(xExit,    yExit);
-	float exitTime =  std::min(zExit, exitTime);
-
+	float exitTime = std::min({ xExit, yExit, zExit });
+	//printf("Times: %.2f %.2f\n",entryTime, exitTime);
 	float normalx, normaly, normalz;
 
 	// if there was no collision
@@ -103,7 +102,6 @@ CollisionInfo SweptAABB(PhysicsObject& dynamic, HitBox& staTHICC)
 
 		return {1.0f, glm::vec3(normalx, normaly, normalz)};
 	}
-
 	else // if there was a collision 
 	{
 		// calculate normal of collided surface

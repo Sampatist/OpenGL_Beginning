@@ -6,7 +6,22 @@
 
 namespace Renderer
 {
-	
+	struct DrawableBox
+	{
+		glm::vec3 pos;
+		float w;
+		float h;
+		float d;
+		glm::vec3 color;
+	};
+
+	struct DrawableLine
+	{
+		glm::vec3 start;
+		glm::vec3 end;
+		glm::vec3 color;
+	};
+
 	struct RenderableMesh
 	{
 		unsigned int vboID;
@@ -25,4 +40,5 @@ namespace Renderer
 	void endFrame();
 	void terminate();
 	void draw();
+	void drawDebugBox(DrawableBox box);
 }

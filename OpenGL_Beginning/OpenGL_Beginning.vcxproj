@@ -49,6 +49,7 @@
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
     <None Include="res\shaders\BackgroundQuad.shader" />
+    <None Include="res\shaders\Debug.shader" />
     <None Include="res\shaders\SunShadowMap.shader" />
     <None Include="res\skybox\skybox.zip" />
     <None Include="src\vendor\glm\detail\func_common.inl" />

@@ -2,28 +2,35 @@
 #include "ShadersNamespace.h"
 #include <memory>
 
-static std::shared_ptr<Shader> chunkShader;
-static std::shared_ptr<Shader> sunShadowMapShader;
-static std::shared_ptr<Shader> backgroundQuadShader;
+static std::unique_ptr<Shader> chunkShader;
+static std::unique_ptr<Shader> sunShadowMapShader;
+static std::unique_ptr<Shader> backgroundQuadShader;
+static std::unique_ptr<Shader> debugShader;
 
 void Shaders::initialize()
 {
-    chunkShader = std::make_shared<Shader>("res/shaders/Basic.shader");
-    sunShadowMapShader = std::make_shared<Shader>("res/shaders/SunShadowMap.shader");
-    backgroundQuadShader = std::make_shared<Shader>("res/shaders/BackgroundQuad.shader");
+    chunkShader = std::make_unique<Shader>("res/shaders/Basic.shader");
+    sunShadowMapShader = std::make_unique<Shader>("res/shaders/SunShadowMap.shader");
+    backgroundQuadShader = std::make_unique<Shader>("res/shaders/BackgroundQuad.shader");
+    debugShader = std::make_unique<Shader>("res/shaders/Debug.shader");
 }
 
-std::shared_ptr<Shader> Shaders::getChunkShader()
+Shader& Shaders::getChunkShader()
 {
-    return chunkShader;
+    return *chunkShader;
 }
 
-std::shared_ptr<Shader> Shaders::getSunShadowMapShader()
+Shader& Shaders::getSunShadowMapShader()
 {
-    return sunShadowMapShader;
+    return *sunShadowMapShader;
 }
 
-std::shared_ptr<Shader> Shaders::getBackgroundQuadShader()
+Shader& Shaders::getBackgroundQuadShader()
 {
-    return backgroundQuadShader;
+    return *backgroundQuadShader;
+}
+
+Shader& Shaders::getDebugShader()
+{
+    return *debugShader;
 }

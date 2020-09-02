@@ -2,23 +2,6 @@
 #include "glm/vec3.hpp"
 #include <array>
 
-struct HitBox
-{
-	std::array<glm::vec3, 8> points;
-
-	HitBox(float width, float height, float depth)
-	{
-		points[0] = glm::vec3(  width / 2,  height / 2,  length / 2 );  // posXposYposZ
-		points[1] = glm::vec3(  width / 2,  height / 2, -length / 2 );	// posXposYnegZ
-		points[2] = glm::vec3( -width / 2,  height / 2,  length / 2 );	// negXposYposZ
-		points[3] = glm::vec3( -width / 2,  height / 2, -length / 2 );	// negXposYnegZ
-							 										 
-		points[4] = glm::vec3(  width / 2, -height / 2,  length / 2 );	// posXnegYposZ
-		points[5] = glm::vec3(  width / 2, -height / 2, -length / 2 );	// posXnegYnegZ
-		points[6] = glm::vec3( -width / 2, -height / 2,  length / 2 );	// negXnegYposZ
-		points[7] = glm::vec3( -width / 2, -height / 2, -length / 2 );	// negXnegYnegZ
-	}	
-};
 
 struct HitBox
 {

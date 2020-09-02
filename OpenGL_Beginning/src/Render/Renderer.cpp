@@ -38,10 +38,11 @@ static unsigned int chunkIndexBufferObject = 0;
 static unsigned int sunShadowMapFramebuffer = 0;
 static unsigned int backgroundQuadBufferObject = 0; 
 static unsigned int gBuffer = 0;
-static unsigned int shadowTexture;
-static unsigned int gColorTexture;
-static unsigned int gDepthTexture;
-static unsigned int skyBoxTexture;
+static unsigned int shadowTexture = 0;
+static unsigned int gColorTexture = 0;
+static unsigned int gDepthTexture = 0;
+static unsigned int skyBoxTexture = 0;
+static unsigned int debugBufferObject = 0;
    
 void Renderer::initialize() 
 {  
@@ -129,19 +130,18 @@ void Renderer::initialize()
     // More than enough!!!  40000
     // 3D NOISE 600000
     glEnable(GL_DEPTH_TEST);
-    glEnable(GL_CULL_FACE);
 
     Shaders::initialize();
 
     glm::mat4 modelMatrix(1.0f);
     glm::mat4x4 projectionMatrix = ViewFrustum::getProjMatrix();
 
-    Shaders::getBackgroundQuadShader()->Bind();
-    Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_projMatrix", 1, GL_FALSE, &projectionMatrix[0][0]);
-    Shaders::getChunkShader()->Bind();
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &projectionMatrix[0][0]);
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_Model", 1, GL_FALSE, &modelMatrix[0][0]);
-    Shaders::getChunkShader()->SetUniform1f("u_ChunkDistance", Settings::viewDistance);
+    Shaders::getBackgroundQuadShader().Bind();
+    Shaders::getBackgroundQuadShader().SetUniformMatrix4f("u_projMatrix", 1, GL_FALSE, &projectionMatrix[0][0]);
+    Shaders::getChunkShader().Bind();
+    Shaders::getChunkShader().SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &projectionMatrix[0][0]);
+    Shaders::getChunkShader().SetUniformMatrix4f("u_Model", 1, GL_FALSE, &modelMatrix[0][0]);
+    Shaders::getChunkShader().SetUniform1f("u_ChunkDistance", Settings::viewDistance);
 
     /*Create sun shadow map frame buffer and texture*/
 
@@ -171,7 +171,7 @@ void Renderer::initialize()
     glDrawBuffer(GL_NONE);
     glReadBuffer(GL_NONE);
 
-    Shaders::getChunkShader()->SetUniform1i("u_SunShadowTexture", 0);
+    Shaders::getChunkShader().SetUniform1i("u_SunShadowTexture", 0);
 
     // deferred rendering
     glGenFramebuffers(1, &gBuffer);
@@ -203,13 +203,13 @@ void Renderer::initialize()
     float scatterG = pow(400 / waveLengths.y, 4) * scatteringStrength;
     float scatterB = pow(400 / waveLengths.z, 4) * scatteringStrength;
 
-    Shaders::getBackgroundQuadShader()->Bind();
-    Shaders::getBackgroundQuadShader()->SetUniform3f("u_scatteringCoefficients", scatterR, scatterG, scatterB);
-    Shaders::getBackgroundQuadShader()->SetUniform1i("u_gColor", 0);
-    Shaders::getBackgroundQuadShader()->SetUniform1i("u_gDepth", 4);
-    Shaders::getBackgroundQuadShader()->SetUniform1i("u_StarTexture", 1);
+    Shaders::getBackgroundQuadShader().Bind();
+    Shaders::getBackgroundQuadShader().SetUniform3f("u_scatteringCoefficients", scatterR, scatterG, scatterB);
+    Shaders::getBackgroundQuadShader().SetUniform1i("u_gColor", 0);
+    Shaders::getBackgroundQuadShader().SetUniform1i("u_gDepth", 4);
+    Shaders::getBackgroundQuadShader().SetUniform1i("u_StarTexture", 1);
     auto binormal = Sun::GetBinormal();
-    Shaders::getBackgroundQuadShader()->SetUniform3f("u_SunBinormal", binormal.x, binormal.y, binormal.z);
+    Shaders::getBackgroundQuadShader().SetUniform3f("u_SunBinormal", binormal.x, binormal.y, binormal.z);
 
     // - skyBox texture
     glGenTextures(1, &skyBoxTexture);
@@ -249,7 +249,14 @@ void Renderer::initialize()
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);  
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE); 
+
+    glGenBuffers(1, &debugBufferObject);
+    glBindBuffer(GL_ARRAY_BUFFER, debugBufferObject);
+    glBufferData(GL_ARRAY_BUFFER, 1000000, nullptr, GL_STATIC_DRAW);
+
+    Shaders::getDebugShader().Bind();
+    Shaders::getDebugShader().SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &projectionMatrix[0][0]);
 }
 
 GLFWwindow* const Renderer::getWindow()
@@ -398,10 +405,10 @@ void Renderer::bufferChunks()
 
 static void drawBackground(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& lightDir, glm::mat4x4& viewMatrix)
 {
-    Shaders::getBackgroundQuadShader()->Bind();
-    Shaders::getBackgroundQuadShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
-    Shaders::getBackgroundQuadShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
-    Shaders::getBackgroundQuadShader()->SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &viewMatrix[0][0]);
+    Shaders::getBackgroundQuadShader().Bind();
+    Shaders::getBackgroundQuadShader().SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
+    Shaders::getBackgroundQuadShader().SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
+    Shaders::getBackgroundQuadShader().SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &viewMatrix[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
@@ -410,8 +417,8 @@ static void drawBackground(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& light
 
 static void drawShadowMap(glm::mat4x4& svpm)
 {
-    Shaders::getSunShadowMapShader()->Bind();
-    Shaders::getSunShadowMapShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
+    Shaders::getSunShadowMapShader().Bind();
+    Shaders::getSunShadowMapShader().SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
 
     for (auto pair : drawableMeshes)
     {
@@ -423,7 +430,7 @@ static void drawShadowMap(glm::mat4x4& svpm)
             continue;
         if (drawableMesh.bufferSize == 0)
             continue;
-        Shaders::getSunShadowMapShader()->SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
+        Shaders::getSunShadowMapShader().SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
         glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
@@ -435,13 +442,13 @@ static void drawShadowMap(glm::mat4x4& svpm)
 static void drawChunks(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& lightDir, glm::vec3& lightDirForw, glm::vec3& lightDirBackw, glm::mat4x4& viewMatrix, glm::mat4x4& svpm)
 {
 
-    Shaders::getChunkShader()->Bind();
-    Shaders::getChunkShader()->SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
-    Shaders::getChunkShader()->SetUniform3f("u_lightDirForw", lightDirForw.x, lightDirForw.y, lightDirForw.z);
-    Shaders::getChunkShader()->SetUniform3f("u_lightDirBackw", lightDirBackw.x, lightDirBackw.y, lightDirBackw.z);
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_View", 1, GL_FALSE, &viewMatrix[0][0]);
-    Shaders::getChunkShader()->SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
-    Shaders::getChunkShader()->SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
+    Shaders::getChunkShader().Bind();
+    Shaders::getChunkShader().SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
+    Shaders::getChunkShader().SetUniform3f("u_lightDirForw", lightDirForw.x, lightDirForw.y, lightDirForw.z);
+    Shaders::getChunkShader().SetUniform3f("u_lightDirBackw", lightDirBackw.x, lightDirBackw.y, lightDirBackw.z);
+    Shaders::getChunkShader().SetUniformMatrix4f("u_View", 1, GL_FALSE, &viewMatrix[0][0]);
+    Shaders::getChunkShader().SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
+    Shaders::getChunkShader().SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
 
     for (auto pair : drawableMeshes)
     {
@@ -454,7 +461,7 @@ static void drawChunks(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& lightDir,
         if (drawableMesh.bufferSize == 0)
             continue;
 
-        Shaders::getChunkShader()->SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
+        Shaders::getChunkShader().SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
         glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
@@ -462,6 +469,97 @@ static void drawChunks(glm::vec3& camPos, glm::vec3& camDir,glm::vec3& lightDir,
         glDrawElements(GL_TRIANGLES, drawableMesh.bufferSize * 3 / 2, GL_UNSIGNED_INT, nullptr);
     }
 }
+
+
+static std::vector<Renderer::DrawableBox> debugBoxes;
+static std::vector<Renderer::DrawableLine> debugLines;
+
+static void drawDebug(glm::mat4x4& viewMatrix)
+{
+    Shaders::getDebugShader().Bind();
+    Shaders::getDebugShader().SetUniformMatrix4f("u_View", 1, GL_FALSE, &viewMatrix[0][0]);
+
+    std::vector<float> boxMeshes;
+    for(auto& box : debugBoxes)
+    {
+        float boxMesh[216] = {
+            box.pos.x        , box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+
+            box.pos.x + box.w, box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+
+            box.pos.x        , box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+            box.pos.x + box.w, box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+
+
+            box.pos.x        , box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+                                                           
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+
+            box.pos.x + box.w, box.pos.y        , box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+
+
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z        , box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+
+            box.pos.x + box.w, box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x        , box.pos.y + box.h, box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+            box.pos.x + box.w, box.pos.y        , box.pos.z + box.d, box.color.r, box.color.g, box.color.b,
+        };
+        boxMeshes.insert(boxMeshes.end(), boxMesh, boxMesh + 216);
+	}
+    glBindBuffer(GL_ARRAY_BUFFER, debugBufferObject);
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), 0);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+    glBufferSubData(GL_ARRAY_BUFFER, 0, boxMeshes.size() * sizeof(float), boxMeshes.data());
+
+    debugBoxes.clear();
+
+    glDrawArrays(GL_TRIANGLES, 0, boxMeshes.size() / 6);
+}
+
+void Renderer::drawDebugBox(DrawableBox box)
+{
+    debugBoxes.push_back(box);
+}
+
+//void Renderer::drawDebugLine(DrawableLine line)
+//{
+//    debugLines.push_back(line);
+//}
 
 void Renderer::draw()
 {
@@ -474,7 +572,6 @@ void Renderer::draw()
     glm::mat4 svpm = Shadows::calculateSunVPMatrix();
     glm::vec3 camDir = Camera::GetCameraAngle();
     glm::mat4x4 viewMatrix = ViewFrustum::getViewMatrix();
-   
 
     // Render block highlight
 
@@ -492,7 +589,18 @@ void Renderer::draw()
     glClear(GL_DEPTH_BUFFER_BIT | GL_COLOR_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
     glViewport(0, 0, 1600, 900);
-    drawChunks(camPos, camDir, lightDir, lightDirF , lightDirB, viewMatrix, svpm);
+    drawChunks(camPos, camDir, lightDir, lightDirF, lightDirB, viewMatrix, svpm);
+
+    // Debug stuff
+    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+    glDisable(GL_DEPTH_TEST);
+    glViewport(0, 0, 1600, 900);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    glDisable(GL_CULL_FACE);
+    glLineWidth(2);
+    drawDebug(viewMatrix);
+    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    glEnable(GL_CULL_FACE);
 
     // Render background quad
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

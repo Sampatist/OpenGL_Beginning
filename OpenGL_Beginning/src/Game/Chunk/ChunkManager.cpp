@@ -202,7 +202,7 @@ void ChunkManager::update()
 	static int counter = 0;
 	if(counter++ == 60)
 	{
-		printf("%d loaded chunks.\n", loadedChunksMap.size());
+		//printf("%d loaded chunks.\n", loadedChunksMap.size());
 		counter = 0;
 	}
 }

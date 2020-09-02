@@ -4,72 +4,100 @@
 #include <array>
 #include "glm/trigonometric.hpp"
 #include "Swept_AABB.h"
+#include "Renderer.h"
 
 constexpr float dragCoef = 0.05f;
 const glm::vec3 gravity(0.0f, -1.0f, 0.0f);
 //TODO
 
+std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
+{
+	HitBox b = p.getHitBox();
+	glm::vec3 v = p.getVelocity();
+
+	std::vector<HitBox> hitboxes;
+
+	float x = v.x > 0 ? b.x : b.x + v.x;  
+	float y = v.y > 0 ? b.y : b.y + v.y;  
+	float z = v.z > 0 ? b.z : b.z + v.z;
+
+	float w = v.x > 0 ? v.x + b.w : b.w - v.x;  
+	float h = v.y > 0 ? v.y + b.h : b.h - v.y;  
+	float d = v.z > 0 ? v.z + b.d : b.d - v.z;  
+
+	for(int k = floor(y); k < ceil(y + h); k++)
+	{
+		for(int j = floor(z); j < ceil(z + d); j++)
+		{
+			for(int i = floor(x); i < ceil(x + w); i++)
+			{
+				int chunkX = floor(float(i) / CHUNK_WIDTH);
+				int chunkZ = floor(float(j) / CHUNK_LENGTH);
+				int chunkBlockX = i % CHUNK_WIDTH;
+				chunkBlockX = chunkBlockX + (chunkBlockX < 0) * CHUNK_WIDTH;
+				int chunkBlockZ = j % CHUNK_LENGTH;
+				chunkBlockZ = chunkBlockZ + (chunkBlockZ < 0) * CHUNK_LENGTH;
+				int chunkBlockY = k;
+				std::pair<int, int> chunkLocation(chunkX, chunkZ);
+				ChunkManager::loadedChunksLock.lock();
+				if(auto chunk = ChunkManager::lock_getChunk(chunkLocation))
+				{
+					if(auto blockID = chunk->getBlock(chunkBlockX, chunkBlockZ, chunkBlockY))
+					{
+						Renderer::drawDebugBox({ {i,k,j}, 1, 1, 1, {0.0f,0.0f,1.0f} });
+						hitboxes.push_back({ (float)i,(float)k,(float)j,1.0f,1.0f,1.0f });
+					}
+				}
+				ChunkManager::loadedChunksLock.unlock();
+			}
+		}
+	}
+	Renderer::drawDebugBox({ {b.x, b.y, b.z}, b.w, b.h, b.d, {1.0f,0.0f,0.0f} });
+	std::cout << b.x << " " << b.z << std::endl;
+	return hitboxes;
+}
+
 void PhysicsObject::update()
 {
 	auto drag = 1 - pow(glm::length(velocity), 2) * dragCoef;
-	acceleration = (currentForce + gravity) / mass * drag;
+	acceleration = (currentForce) / mass * drag;
 	currentForce = glm::vec3(0);
 
 	velocity += acceleration;
 	float velocityLength = glm::length(velocity);
 
+	std::vector<HitBox> blocks = getBroadPhasedHitBoxes(*this);
+	std::vector<CollisionInfo> infos;
 
-	//Block pos, w,h,d; 
-
-
-	if (velocityLength > 0)
+	for(auto& block : blocks)
 	{
-		glm::vec3 unitVelocity(normalize(velocity));
-
-		std::vector<RayCast::Info> infos;
-
-		for(int i = 0; i < 8; i++)
-		{
-			auto point = position + hitbox.points[i];
-			RayCast::Info info = RayCast::castRayAndGetTheInfoPlease(point, unitVelocity, velocityLength, 15);
-			if (info.hit)
-			{
-				infos.push_back(info);
-			}
-		}
-		
-		if(!infos.empty())
-		{
-			const auto minLengthSort = [](RayCast::Info& first, RayCast::Info& second) {
-				return first.rayLength < second.rayLength;
-			};
-			std::sort(infos.begin(), infos.end(), minLengthSort);
-
-			for(int i = 0; i < 8; i++)
-			{
-				if (infos.size() == i)
-					break;
-				RayCast::Info& collisionInfo = infos[i];
-				glm::vec3 collisionResponseVector = collisionInfo.faceNormal * glm::dot(velocity, -collisionInfo.faceNormal);
-				std::cout << "collisionResponseVector: " << collisionResponseVector.x << " " << collisionResponseVector.y << " " << collisionResponseVector.z << std::endl;
-				if(abs(collisionInfo.faceNormal.x) == 1)
-				{
-					velocity.x = 0;
-				}
-				else if(abs(collisionInfo.faceNormal.z) == 1)
-				{
-					velocity.z = 0;
-				}
-				else
-				{
-					velocity.y = 0;
-				}
-			}
-			// position -= collisionResponseVector;
-		}
+		infos.push_back(SweptAABB(*this, block));
 	}
 
-	position += velocity;
+	// remove duplicate normals from infos vector
+
+	if (!infos.empty())
+	{
+		const auto leastTimeSort = [](const CollisionInfo& first, const CollisionInfo& second){
+			return first.time < second.time;
+		};
+
+		std::sort(infos.begin(), infos.end(), leastTimeSort);
+
+		CollisionInfo& firstCollisionInfo = infos.front();
+		float collisionTime = firstCollisionInfo.time;
+		float remainingTime = 1 - collisionTime;
+	
+		position += velocity * collisionTime;
+
+ 		velocity += - glm::dot(velocity, firstCollisionInfo.normal) * firstCollisionInfo.normal;
+
+		position += velocity * remainingTime;
+	}
+	else 
+	{
+		position += velocity;
+	}
 
 	if (glm::length(acceleration) == 0)
 		velocity *= 0.9f;
@@ -95,8 +123,9 @@ glm::vec3 PhysicsObject::getVelocity() const
 HitBox PhysicsObject::getHitBox() const
 {
 	HitBox realHitBox = hitbox;
-	realHitBox.x += position.x + hitbox.w / 2;
-	realHitBox.y += position.y + hitbox.h / 2;
-	realHitBox.z += position.z + hitbox.d / 2;
+	realHitBox.x = position.x - hitbox.w / 2;
+	realHitBox.y = position.y - hitbox.h / 2;
+	realHitBox.z = position.z - hitbox.d / 2;
 	return realHitBox;
 }
+

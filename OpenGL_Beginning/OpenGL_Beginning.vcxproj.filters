@@ -451,6 +451,7 @@
     <None Include="res\shaders\SunShadowMap.shader" />
     <None Include="res\shaders\BackgroundQuad.shader" />
     <None Include="res\skybox\skybox.zip" />
+    <None Include="res\shaders\Debug.shader" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vendor\glm\detail\_features.hpp">
