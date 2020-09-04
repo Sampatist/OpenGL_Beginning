@@ -22,9 +22,12 @@ private:
 	glm::vec3 currentForce;
 	HitBox hitbox;
 public:
+	bool isOnGround;
+	bool Creative;
+public:
 	PhysicsObject(glm::vec3 startingPosition, float mass, HitBox hitbox)
 		: position(startingPosition), velocity(0), acceleration(0), 
-		mass(mass), currentForce(0), hitbox(hitbox) {}
+		mass(mass), currentForce(0), hitbox(hitbox), isOnGround(0), Creative(0) {}
 
 	void update();
 	void addForce(glm::vec3 force);

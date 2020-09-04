@@ -6,7 +6,7 @@
 #include "View.h"
 #include "PhysicsEngine/PhysicalObjects.h"
 
-static float GameTime = -1.8f;
+static float GameTime = 0.4f;
 
 void Game::initialize()
 {
@@ -19,7 +19,7 @@ void Game::initialize()
 
 void Game::run()
 {
-	GameTime += 0.0005f;
+	GameTime += 0.0000f;
 	inputManager::update();
 	
 	BlockEdit::update();

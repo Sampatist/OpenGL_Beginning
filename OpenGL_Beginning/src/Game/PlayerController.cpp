@@ -23,7 +23,7 @@ static	glm::vec3 forward_vector(0.0f);
 static float mouseX = 0.0f;
 static float mouseY = 0.0f;
 
-static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 1.0f, 2.0f, 1.0f});
+static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 0.8f, 1.7f, 0.8f});
 
 
 void PlayerController::update()
@@ -46,7 +46,11 @@ void PlayerController::update()
 	{
 		RayCast::Info info = BlockEdit::getCurrentRayInfo();
 
-		if(info.hit)
+		if (info.hit)
+		{
+			ChunkManager::addBlockUpdate({ info.block.chunkLocation, info.block.x, info.block.z, info.block.y, 0 });
+		}
+		/*if(info.hit)
 		{
 			for (int x = -1; x <= 1; x++)
 			{
@@ -74,41 +78,53 @@ void PlayerController::update()
 					}
 				}
 			}
-		}
+		}*/
 	}
 	if (mouseRight)
 	{
 		RayCast::Info info = BlockEdit::getCurrentRayInfo();
+		
+		//std::pair<int, int> location(info.block.chunkLocation.first, info.block.chunkLocation.second);
+		std::cout << "Block pos: " << info.block.x << " " << info.block.z << " " <<  info.block.y << std::endl; 
+		
 
-		if (info.hit)
-		{
-			for (int x = -1; x <= 1; x++)
-			{
-				for (int z = -1; z <= 1; z++)
-				{
-					auto actualBlockX = info.block.x - x * CHUNK_WIDTH;
-					auto actualBlockZ = info.block.z - z * CHUNK_LENGTH;
-					auto actualBlockY = info.block.y;
-					std::pair<int, int> location(info.block.chunkLocation.first + x, info.block.chunkLocation.second + z);
-					for (int k = 0; k < CHUNK_HEIGHT; k++)
-					{
-						for (int j = 0; j < CHUNK_LENGTH; j++)
-						{
-							for (int i = 0; i < CHUNK_WIDTH; i++)
-							{
-								auto a = (actualBlockX - i) * (actualBlockX - i);
-								auto b = (actualBlockY - k) * (actualBlockY - k);
-								auto c = (actualBlockZ - j) * (actualBlockZ - j);
-								if (a + b + c < 100)
-								{
-									ChunkManager::addBlockUpdate({ location, i, j, k, 3});
-								}
-							}
-						}
-					}
-				}
-			}
-		}
+		//if (info.hit)
+		//{
+		//	ChunkManager::addBlockUpdate({ info.block.chunkLocation, info.block.x, info.block.z, info.block.y, info.block.blockID});
+		//}
+
+
+		//RayCast::Info info = BlockEdit::getCurrentRayInfo();
+
+		//if (info.hit)
+		//{
+		//	for (int x = -1; x <= 1; x++)
+		//	{
+		//		for (int z = -1; z <= 1; z++)
+		//		{
+		//			auto actualBlockX = info.block.x - x * CHUNK_WIDTH;
+		//			auto actualBlockZ = info.block.z - z * CHUNK_LENGTH;
+		//			auto actualBlockY = info.block.y;
+		//			std::pair<int, int> location(info.block.chunkLocation.first + x, info.block.chunkLocation.second + z);
+		//			for (int k = 0; k < CHUNK_HEIGHT; k++)
+		//			{
+		//				for (int j = 0; j < CHUNK_LENGTH; j++)
+		//				{
+		//					for (int i = 0; i < CHUNK_WIDTH; i++)
+		//					{
+		//						auto a = (actualBlockX - i) * (actualBlockX - i);
+		//						auto b = (actualBlockY - k) * (actualBlockY - k);
+		//						auto c = (actualBlockZ - j) * (actualBlockZ - j);
+		//						if (a + b + c < 100)
+		//						{
+		//							ChunkManager::addBlockUpdate({ location, i, j, k, 3});
+		//						}
+		//					}
+		//				}
+		//			}
+		//		}
+		//	}
+		//}
 	}
 	mouseX += deltaMouseX * SENSITIVITY;
 	mouseY += deltaMouseY * SENSITIVITY;
@@ -118,10 +134,20 @@ void PlayerController::update()
 
 	right_vector = glm::normalize(glm::cross(Camera::GetCameraAngle(), up_vector));
 	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
+	
+	if (shift == 1.0f)
+		player.Creative = 1;
+	else
+		player.Creative = 0;
 
-	glm::vec3 force = right_vector * right + forward_vector * forward + up_vector * fly;
+	glm::vec3 force(0.0f, 0.0f, 0.0f);
+	float jump = fly * 30.0f;
+	if (player.isOnGround || player.Creative)
+		force = right_vector * right + forward_vector * forward + up_vector * jump - (29.0f / 30.0f) * up_vector * jump * float(player.Creative == 1);
+	else
+		force = (right_vector * right + forward_vector * forward) / 10.0f;
 
-	player.addForce(force);
+	player.addForce(force / 4.0f);
 	player.update();
-	Camera::setPosition(player.getPosition() + glm::vec3(0.0f, 8.0f, 0.0f));
+	Camera::setPosition(player.getPosition() + glm::vec3(0.0f, 0.6f, 0.0f));
 }

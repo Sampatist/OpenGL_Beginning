@@ -4,6 +4,8 @@
 #include "PhysicsObject.h"
 #include <iostream>
 
+constexpr float EPSILON = 0.00001f;
+
 // döndü = collision time , normal info
 CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 {
@@ -17,34 +19,70 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 	if (v.x > 0.0f)
 	{
 		xDisEntry = staTHICC.x - (dynaMHICC.x + dynaMHICC.w);
+		xDisEntry = abs(xDisEntry) < EPSILON ? 0 : xDisEntry;
 		xDisExit  = (staTHICC.x + staTHICC.w) - dynaMHICC.x;
+		xDisExit = abs(xDisExit) < EPSILON ? 0 : xDisExit;
 	}
 	else
 	{
 		xDisEntry = (staTHICC.x + staTHICC.w) - dynaMHICC.x;
+		xDisEntry = abs(xDisEntry) < EPSILON ? 0 : xDisEntry;
 		xDisExit  = staTHICC.x - (dynaMHICC.x + dynaMHICC.w);
+		xDisExit = abs(xDisExit) < EPSILON ? 0 : xDisExit;
+		if (v.x == 0.0f)
+		{
+			if(!(xDisEntry > 0 && xDisExit < 0))
+			{
+				//std::cout << "exit by x\n";
+				return { 1.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+			}
+		}
 	}
-
+	
 	if (v.y > 0.0f)
 	{
 		yDisEntry = staTHICC.y - (dynaMHICC.y + dynaMHICC.h);
+		yDisEntry = abs(yDisEntry) < EPSILON ? 0 : yDisEntry;
 		yDisExit  = (staTHICC.y + staTHICC.h) - dynaMHICC.y;
+		yDisExit = abs(yDisExit) < EPSILON ? 0 : yDisExit;
 	}
 	else
 	{
-		yDisEntry = (staTHICC.y + staTHICC.h) - dynaMHICC.y;
-		yDisExit  = staTHICC.y - (dynaMHICC.y + dynaMHICC.h);
+		yDisEntry = (staTHICC.y + staTHICC.h) - dynaMHICC.y;   
+		yDisEntry = abs(yDisEntry) < EPSILON ? 0 : yDisEntry;
+		yDisExit  = staTHICC.y - (dynaMHICC.y + dynaMHICC.h);  
+		yDisExit = abs(yDisExit) < EPSILON ? 0 : yDisExit;
+		if (v.y == 0.0f)
+		{
+			if (!(yDisEntry > 0 && yDisExit < 0))
+			{
+				//std::cout << "exit by y\n";
+				return { 1.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+			}
+		}
 	}
 
 	if (v.z > 0.0f)
 	{
 		zDisEntry = staTHICC.z - (dynaMHICC.z + dynaMHICC.d);
+		zDisEntry = abs(zDisEntry) < EPSILON ? 0 : zDisEntry;
 		zDisExit  = (staTHICC.z + staTHICC.d) - dynaMHICC.z;
+		zDisExit = abs(zDisExit) < EPSILON ? 0 : zDisExit;
 	}
 	else
 	{
 		zDisEntry = (staTHICC.z + staTHICC.d) - dynaMHICC.z;
+		zDisEntry = abs(zDisEntry) < EPSILON ? 0 : zDisEntry;
 		zDisExit  = staTHICC.z - (dynaMHICC.z + dynaMHICC.d);
+		zDisExit = abs(zDisExit) < EPSILON ? 0 : zDisExit;
+		if (v.z == 0.0f)
+		{
+			if (!(zDisEntry > 0 && zDisExit < 0))
+			{
+				//std::cout << "exit by z\n";
+				return { 1.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+			}
+		}
 	}
 
 	//calculate times 
@@ -90,17 +128,26 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 	float entryTime = std::max({ xEntry, yEntry, zEntry });
 
 	float exitTime = std::min({ xExit, yExit, zExit });
-	//printf("Times: %.2f %.2f\n",entryTime, exitTime);
 	float normalx, normaly, normalz;
 
 	// if there was no collision
-	if (entryTime > exitTime || xEntry < 0.0f && yEntry < 0.0f && zEntry < 0.0f || xEntry > 1.0f || yEntry > 1.0f || zEntry > 1.0f)
+
+	//std::cout << std::endl;
+	//std::cout << staTHICC.x << " " << staTHICC.y << " " << staTHICC.z << std::endl;
+	//std::cout << entryTime << std::endl;
+	//std::cout << exitTime << std::endl;
+	//std::cout << xEntry << std::endl;
+	//std::cout << yEntry << std::endl;
+	//std::cout << zEntry << std::endl;
+
+	if (entryTime > exitTime || (xEntry < 0.0f && yEntry < 0.0f && zEntry < 0.0f) || 
+		xEntry > 1.0f || yEntry > 1.0f || zEntry > 1.0f) 
 	{
 		normalx = 0.0f;
 		normaly = 0.0f;
 		normalz = 0.0f;
 
-		return {1.0f, glm::vec3(normalx, normaly, normalz)};
+		return { 1.0f, glm::vec3(normalx, normaly, normalz), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
 	}
 	else // if there was a collision 
 	{
@@ -151,6 +198,6 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 			}
 		}
 
-		return {entryTime, glm::vec3(normalx, normaly, normalz)};
+		return { entryTime, glm::vec3(normalx, normaly, normalz), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
 	}
 }
