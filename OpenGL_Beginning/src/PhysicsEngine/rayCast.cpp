@@ -55,7 +55,7 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 		glm::vec3 translate = dir * minStep;
 		length += glm::length(translate);
 		pos += translate;
-		if(abs(pos.y - 128) > 128 || abs(rayBlockY - 128) > 128)
+		if(abs(pos.y - (CHUNK_HEIGHT / 2.0f - 0.5)) > (CHUNK_HEIGHT / 2.0f - 0.5) || abs(float(rayBlockY) - (CHUNK_HEIGHT / 2 - 0.5)) > (CHUNK_HEIGHT / 2 - 0.5))
 		{
 			break;
 		}

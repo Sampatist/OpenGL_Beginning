@@ -3,14 +3,19 @@
 #include "Game.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/mat4x4.hpp>
+#include "Time.h"
 
-static glm::vec3 sunDir(normalize(glm::vec3(sin(Game::getGameTime()), cos(Game::getGameTime()), sin(Game::getGameTime()) * 0.4)));
-static glm::vec3 sunDirDerivative(glm::vec3(cos(Game::getGameTime()), -sin(Game::getGameTime()), cos(Game::getGameTime()) * 0.4));
-static glm::vec3 sunDirSecondDerivative(glm::vec3(-sin(Game::getGameTime()), -cos(Game::getGameTime()), -sin(Game::getGameTime()) * 0.4));
+constexpr float PI = 3.14159265359f;
+
+static double sunRadian = (Time::getGameTime() / (double)(24 * 60 * 60) * 2 * PI) - PI;
+
+static glm::vec3 sunDir(normalize(glm::vec3(sin(sunRadian), cos(sunRadian), sin(sunRadian) * 0.4)));
+static glm::vec3 sunDirDerivative(glm::vec3(cos(sunRadian), -sin(sunRadian), cos(sunRadian) * 0.4));
+static glm::vec3 sunDirSecondDerivative(glm::vec3(-sin(sunRadian), -cos(sunRadian), -sin(sunRadian) * 0.4));
 static glm::vec3 binormalVectorOfSun(normalize(glm::cross(sunDirDerivative, sunDirSecondDerivative)));
 const float sunRadius = 0.3f;
-static glm::vec3 sunDirForw(normalize(glm::vec3(sin(Game::getGameTime() + sunRadius), cos(Game::getGameTime() + sunRadius), sin(Game::getGameTime() + sunRadius) * 0.4)));
-static glm::vec3 sunDirBackw(normalize(glm::vec3(sin(Game::getGameTime() - sunRadius), cos(Game::getGameTime() - sunRadius), sin(Game::getGameTime() - sunRadius) * 0.4)));
+static glm::vec3 sunDirForw(normalize(glm::vec3(sin(sunRadian + sunRadius), cos(sunRadian + sunRadius), sin(sunRadian + sunRadius) * 0.4)));
+static glm::vec3 sunDirBackw(normalize(glm::vec3(sin(sunRadian - sunRadius), cos(sunRadian - sunRadius), sin(sunRadian - sunRadius) * 0.4)));
 
 
 glm::vec3 Sun::GetDirection()
@@ -33,26 +38,28 @@ glm::vec3 Sun::GetBinormal()
     return binormalVectorOfSun;
 }
 
-void Sun::SetDirection(float time)
+static void SetDirection(double radian)
 {
-    sunDir = normalize(glm::vec3(sin(time), cos(time), sin(time) * 0.4));
+    sunDir = normalize(glm::vec3(sin(radian), cos(radian), sin(radian) * 0.4));
 }
 
-void Sun::SetDirectionForw(float time)
+static void SetDirectionForw(double radian)
 {
-    sunDirForw = normalize(glm::vec3(sin(time + sunRadius), cos(time + sunRadius), sin(time + sunRadius) * 0.4));
+    sunDirForw = normalize(glm::vec3(sin(radian + sunRadius), cos(radian + sunRadius), sin(radian + sunRadius) * 0.4));
 }
 
-void Sun::SetDirectionBackw(float time)
+static void SetDirectionBackw(double radian)
 {
-    sunDirBackw = normalize(glm::vec3(sin(time - sunRadius), cos(time - sunRadius), sin(time - sunRadius) * 0.4));
+    sunDirBackw = normalize(glm::vec3(sin(radian - sunRadius), cos(radian - sunRadius), sin(radian - sunRadius) * 0.4));
 }
 
-void Sun::SetDirections(float time)
+void Sun::update()
 {
-    Sun::SetDirection(time);
-    Sun::SetDirectionForw(time);
-    Sun::SetDirectionBackw(time);
+    sunRadian = ((Time::getGameTime() / (double)(24 * 60 * 60)) * 2 * PI) - PI;
+
+    SetDirection(sunRadian);
+    SetDirectionForw(sunRadian);
+    SetDirectionBackw(sunRadian);
 }
 
 glm::mat4 Shadows::calculateSunVPMatrix()

@@ -5,11 +5,11 @@
 #include "Chunk/blockEdit.h"
 #include "View.h"
 #include "PhysicsEngine/PhysicalObjects.h"
-
-static float GameTime = 0.4f;
+#include "Shadows.h"
 
 void Game::initialize()
 {
+	Time::intilaize();
 	Settings::readSettingsFile();
 	ViewFrustum::initialize();
 	Renderer::initialize();
@@ -19,9 +19,10 @@ void Game::initialize()
 
 void Game::run()
 {
-	GameTime += 0.0000f;
+	Time::update();
+	Sun::update();
 	inputManager::update();
-	
+
 	BlockEdit::update();
 	PlayerController::update();
 
@@ -30,9 +31,4 @@ void Game::run()
     ChunkManager::update();
 	Renderer::bufferChunks();
 	Renderer::draw();
-}
-
-const float Game::getGameTime()
-{
-	return GameTime;
 }

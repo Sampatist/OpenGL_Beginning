@@ -565,7 +565,6 @@ void Renderer::draw()
 {
     //Variables
     glm::vec3 camPos = Camera::GetPosition();
-    Sun::SetDirections(Game::getGameTime());
     glm::vec3 lightDir = Sun::GetDirection();
     glm::vec3 lightDirF = Sun::GetDirectionForw();
     glm::vec3 lightDirB = Sun::GetDirectionBackw();

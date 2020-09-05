@@ -36,7 +36,7 @@
     <ClCompile Include="src\vendor\stb_image\stb_image.cpp" />
     <ClCompile Include="src\PhysicsEngine\PhysicalObjects.cpp" />
     <ClCompile Include="src\PhysicsEngine\PhysicsObject.cpp" />
-    <ClCompile Include="src\PhysicsEngine\Swept_AABB.cpp" />
+    <ClCompile Include="src\Game\Time.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -1382,6 +1382,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\PhysicsEngine\Swept_AABB.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\PhysicsEngine\BroadPhasedHitBoxes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="src\Game\Time.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

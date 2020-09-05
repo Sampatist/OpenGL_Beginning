@@ -2,7 +2,6 @@
 #include "glm/vec3.hpp"
 #include <array>
 
-
 struct HitBox
 {
 	// position of negx - negy - negz corner 
@@ -21,16 +20,18 @@ private:
 	float mass;
 	glm::vec3 currentForce;
 	HitBox hitbox;
+	bool hasGravity;
 public:
 	bool isOnGround;
-	bool Creative;
+	float groundTime;
 public:
 	PhysicsObject(glm::vec3 startingPosition, float mass, HitBox hitbox)
 		: position(startingPosition), velocity(0), acceleration(0), 
-		mass(mass), currentForce(0), hitbox(hitbox), isOnGround(0), Creative(0) {}
+		mass(mass), currentForce(0), hitbox(hitbox), hasGravity(true), isOnGround(0), groundTime(0) {}
 
 	void update();
 	void addForce(glm::vec3 force);
+	void setGravity(bool value);
 	glm::vec3 getPosition() const;
 	glm::vec3 getVelocity() const;
 	HitBox getHitBox() const;

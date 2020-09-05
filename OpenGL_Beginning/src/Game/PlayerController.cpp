@@ -23,8 +23,9 @@ static	glm::vec3 forward_vector(0.0f);
 static float mouseX = 0.0f;
 static float mouseY = 0.0f;
 
-static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 0.8f, 1.7f, 0.8f});
+static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 0.8f, 1.8f, 0.8f});
 
+static bool isCreative = false;
 
 void PlayerController::update()
 {
@@ -136,18 +137,26 @@ void PlayerController::update()
 	forward_vector = glm::normalize(glm::cross(up_vector, right_vector));
 	
 	if (shift == 1.0f)
-		player.Creative = 1;
+	{
+		player.setGravity(false);
+		isCreative = true;
+	}
 	else
-		player.Creative = 0;
+	{
+		player.setGravity(true);
+		isCreative = false;
+	}
 
 	glm::vec3 force(0.0f, 0.0f, 0.0f);
-	float jump = fly * 30.0f;
-	if (player.isOnGround || player.Creative)
-		force = right_vector * right + forward_vector * forward + up_vector * jump - (29.0f / 30.0f) * up_vector * jump * float(player.Creative == 1);
+	float jump = fly * 8.0f;
+	if (player.groundTime < 5)
+		jump = 0;
+	if (player.isOnGround || isCreative)
+		force = right_vector * right + forward_vector * forward + up_vector * jump - (29.0f / 30.0f) * up_vector * jump * float(isCreative);
 	else
-		force = (right_vector * right + forward_vector * forward) / 10.0f;
+		force = (right_vector * right + forward_vector * forward) / 5.0f;
 
-	player.addForce(force / 4.0f);
+	player.addForce(force);
 	player.update();
-	Camera::setPosition(player.getPosition() + glm::vec3(0.0f, 0.6f, 0.0f));
+	Camera::setPosition(player.getPosition() + glm::vec3(0.0f, 0.75f, 0.0f));
 }

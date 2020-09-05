@@ -13,10 +13,7 @@ namespace Sun
     glm::vec3 GetDirectionForw();
     glm::vec3 GetDirectionBackw();
     glm::vec3 GetBinormal();
-    void SetDirection(float time);
-    void SetDirectionForw(float time);
-    void SetDirectionBackw(float time);
-    void SetDirections(float time);
+    void update();
 }
 
 namespace Shadows

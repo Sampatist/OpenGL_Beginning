@@ -56,7 +56,9 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 		if (loadedChunksMap.find(chunkLocation) == loadedChunksMap.end())
 		{
 			// load chunk
+			ChunkManager::loadedChunksLock.lock();
 			loadedChunksMap[chunkLocation] = std::make_unique<Chunk>(chunkX, chunkZ, 0);
+			ChunkManager::loadedChunksLock.unlock();
 		}
 		
 		chunkCount++;
