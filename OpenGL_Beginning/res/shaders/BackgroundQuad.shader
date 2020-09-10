@@ -1,21 +1,21 @@
 #shader vertex
-#version 330 core
+#version 400 core
 
 layout(location = 0) in vec3 position;
 
 out vec3 viewRay;
 out vec3 rotatedSkyBoxSampleVector;
 
-uniform mat4 u_projMatrix;
-uniform mat4 u_viewMatrix;
+uniform dmat4 u_projMatrix;
+uniform dmat4 u_viewMatrix;
 uniform vec3 u_lightDir;
 uniform vec3 u_SunBinormal;
 
 void main()
 {
-	vec4 viewSpaceCoord = inverse(u_projMatrix) * vec4(position.xy, -1.0f, 1.0f);
+	dvec4 viewSpaceCoord = inverse(u_projMatrix) * dvec4(position.xy, -1.0f, 1.0f);
 	viewSpaceCoord = vec4(viewSpaceCoord.xy, -1.0f, 0.0f);
-	viewRay = (inverse(u_viewMatrix) * viewSpaceCoord).xyz;
+	viewRay = vec3((inverse(u_viewMatrix) * viewSpaceCoord).xyz);
 	vec3 nViewRay = normalize(viewRay);
 
 	float theta = float(u_lightDir.x < 0) * 2 * acos(-1.0f) + acos(dot(u_lightDir, vec3(0,1,0))) * (float(u_lightDir.x < 0) * -2.0f + 1.0f);

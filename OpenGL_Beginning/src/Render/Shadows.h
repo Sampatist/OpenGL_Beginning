@@ -18,5 +18,5 @@ namespace Sun
 
 namespace Shadows
 {
-    glm::mat4 calculateSunVPMatrix();
+    glm::mat<4, 4, double, glm::packed_highp> calculateSunVPMatrix();
 }

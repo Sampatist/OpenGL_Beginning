@@ -1,19 +1,19 @@
 #include "rayCast.h"
 
-RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, float rayLength, int limit = 30)
+RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit = 30)
 {
-	glm::vec3 hitNormal;
+	glm::vec<3, double, glm::packed_highp> hitNormal;
 	dir = glm::normalize(dir);
 
 	int rayBlockX = std::floor(pos.x);
 	int rayBlockZ = std::floor(pos.z);
 	int rayBlockY = std::floor(pos.y);
 
-	float minX = 0;
-	float minZ = 0;
-	float minY = 0;
+	double minX = 0;
+	double minZ = 0;
+	double minY = 0;
 
-	float length = 0;
+	double length = 0;
 
 	int counter = 0;
 
@@ -31,31 +31,31 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 		//minY 
 		minY = (dir.y > 0 ? rayBlockY + 1 - pos.y : pos.y - rayBlockY) / abs(dir.y);
 
-		float minStep = 0;
+		double minStep = 0;
 
 		if (minX <= minZ && minX <= minY)
 		{
-			hitNormal = dir.x > 0 ? glm::vec3(-1.0f, 0.0f, 0.0f) : glm::vec3(1.0f, 0.0f, 0.0f);
+			hitNormal = dir.x > 0 ? glm::vec<3, double, glm::packed_highp>(-1.0f, 0.0f, 0.0f) : glm::vec<3, double, glm::packed_highp>(1.0f, 0.0f, 0.0f);
 			rayBlockX -= (int)hitNormal.x;
 			minStep = minX;
 		}
 		else if (minZ <= minX && minZ <= minY)
 		{
-			hitNormal = dir.z > 0 ? glm::vec3(0.0f, 0.0f, -1.0f) : glm::vec3(0.0f, 0.0f, 1.0f);
+			hitNormal = dir.z > 0 ? glm::vec<3, double, glm::packed_highp>(0.0f, 0.0f, -1.0f) : glm::vec<3, double, glm::packed_highp>(0.0f, 0.0f, 1.0f);
 			rayBlockZ -= (int)hitNormal.z;
 			minStep = minZ;
 		}
 		else
 		{
-			hitNormal = dir.y > 0 ? glm::vec3(0.0f, -1.0f, 0.0f) : glm::vec3(0.0f, 1.0f, 0.0f);
+			hitNormal = dir.y > 0 ? glm::vec<3, double, glm::packed_highp>(0.0f, -1.0f, 0.0f) : glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f);
 			rayBlockY -= (int)hitNormal.y;
 			minStep = minY;
 		}
 
-		glm::vec3 translate = dir * minStep;
+		glm::vec<3, double, glm::packed_highp> translate = dir * minStep;
 		length += glm::length(translate);
 		pos += translate;
-		if(abs(pos.y - (CHUNK_HEIGHT / 2.0f - 0.5)) > (CHUNK_HEIGHT / 2.0f - 0.5) || abs(float(rayBlockY) - (CHUNK_HEIGHT / 2 - 0.5)) > (CHUNK_HEIGHT / 2 - 0.5))
+		if(abs(pos.y - (CHUNK_HEIGHT / 2.0f - 0.5)) > (CHUNK_HEIGHT / 2.0f - 0.5) || abs(double(rayBlockY) - (CHUNK_HEIGHT / 2 - 0.5)) > (CHUNK_HEIGHT / 2 - 0.5))
 		{
 			break;
 		}
@@ -64,8 +64,8 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 			break;
 		}
 
-		int rayChunkX = floor(float(rayBlockX) / CHUNK_WIDTH);
-		int rayChunkZ = floor(float(rayBlockZ) / CHUNK_LENGTH);
+		int rayChunkX = floor(double(rayBlockX) / CHUNK_WIDTH);
+		int rayChunkZ = floor(double(rayBlockZ) / CHUNK_LENGTH);
 		std::pair<int, int> location(rayChunkX, rayChunkZ);
 
 		ChunkManager::loadedChunksLock.lock();
@@ -89,5 +89,5 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, 
 			break;
 		}
 	}
-	return { false, 0, glm::vec3(0), {0, std::pair<int, int>(0, 0), 0, 0, 0} };
+	return { false, 0, glm::vec<3, double, glm::packed_highp>(0), {0, std::pair<int, int>(0, 0), 0, 0, 0} };
 }

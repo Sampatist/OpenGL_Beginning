@@ -6,21 +6,21 @@
 std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 {
 	HitBox b = p.getHitBox();
-	glm::vec3 v = p.getVelocity();
+	glm::vec<3, double, glm::packed_highp> v = p.getVelocity();
 
 	std::vector<HitBox> hitboxes;
 
-	float x = v.x > 0 ? b.x : b.x + v.x;  
-	float y = v.y > 0 ? b.y : b.y + v.y;  
-	float z = v.z > 0 ? b.z : b.z + v.z;
+	double x = v.x > 0 ? b.x : b.x + v.x;  
+	double y = v.y > 0 ? b.y : b.y + v.y;  
+	double z = v.z > 0 ? b.z : b.z + v.z;
 
-	float w = v.x > 0 ? v.x + b.w : b.w - v.x;  
-	float h = v.y > 0 ? v.y + b.h : b.h - v.y;  
-	float d = v.z > 0 ? v.z + b.d : b.d - v.z;  
+	double w = v.x > 0 ? v.x + b.w : b.w - v.x;  
+	double h = v.y > 0 ? v.y + b.h : b.h - v.y;  
+	double d = v.z > 0 ? v.z + b.d : b.d - v.z;  
 
 	for(int k = floor(y); k < ceil(y + h); k++)
 	{
-		if (abs(float(k) - (CHUNK_HEIGHT/2.0f - 0.5)) > (CHUNK_HEIGHT/2.0f - 0.5))
+		if (abs(double(k) - (CHUNK_HEIGHT/2.0 - 0.5)) > (CHUNK_HEIGHT/2.0 - 0.5))
 		{
 			continue;
 		}
@@ -28,8 +28,8 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 		{
 			for(int i = floor(x); i < ceil(x + w); i++)
 			{
-				int chunkX = floor(float(i) / CHUNK_WIDTH);
-				int chunkZ = floor(float(j) / CHUNK_LENGTH);
+				int chunkX = floor(double(i) / CHUNK_WIDTH);
+				int chunkZ = floor(double(j) / CHUNK_LENGTH);
 				int chunkBlockX = i % CHUNK_WIDTH;
 				chunkBlockX = chunkBlockX + (chunkBlockX < 0) * CHUNK_WIDTH;
 				int chunkBlockZ = j % CHUNK_LENGTH;
@@ -42,7 +42,7 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 
 					if(auto blockID = chunk->getBlock(chunkBlockX, chunkBlockZ, chunkBlockY))
 					{
-						hitboxes.push_back({ (float)i,(float)k,(float)j,1.0f,1.0f,1.0f });
+						hitboxes.push_back({ (double)i,(double)k,(double)j,1.0f,1.0f,1.0f });
 					}
 				}
 				ChunkManager::loadedChunksLock.unlock();

@@ -5,34 +5,34 @@
 struct HitBox
 {
 	// position of negx - negy - negz corner 
-	float x, y, z;
+	double x, y, z;
 
 	// Dimensions
-	float w, h, d;
+	double w, h, d;
 };
 
 class PhysicsObject
 {	
 private:
-	glm::vec3 position;
-	glm::vec3 velocity;
-	glm::vec3 acceleration;
-	float mass;
-	glm::vec3 currentForce;
+	glm::vec<3, double, glm::packed_highp> position;
+	glm::vec<3, double, glm::packed_highp> velocity;
+	glm::vec<3, double, glm::packed_highp> acceleration;
+	double mass;
+	glm::vec<3, double, glm::packed_highp> currentForce;
 	HitBox hitbox;
 	bool hasGravity;
 public:
 	bool isOnGround;
 	float groundTime;
 public:
-	PhysicsObject(glm::vec3 startingPosition, float mass, HitBox hitbox)
+	PhysicsObject(glm::vec<3, double, glm::packed_highp> startingPosition, double mass, HitBox hitbox)
 		: position(startingPosition), velocity(0), acceleration(0), 
 		mass(mass), currentForce(0), hitbox(hitbox), hasGravity(true), isOnGround(0), groundTime(0) {}
 
 	void update();
-	void addForce(glm::vec3 force);
+	void addForce(glm::vec<3, double, glm::packed_highp> force);
 	void setGravity(bool value);
-	glm::vec3 getPosition() const;
-	glm::vec3 getVelocity() const;
+	glm::vec<3, double, glm::packed_highp> getPosition() const;
+	glm::vec<3, double, glm::packed_highp> getVelocity() const;
 	HitBox getHitBox() const;
 };

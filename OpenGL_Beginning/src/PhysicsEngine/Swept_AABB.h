@@ -6,19 +6,19 @@
 
 struct CollisionInfo
 {
-	float time;
-	glm::vec3 normal;
-	glm::vec3 hitboxPosition;
+	double time;
+	glm::vec<3, double, glm::packed_highp> normal;
+	glm::vec<3, double, glm::packed_highp> hitboxPosition;
 };
 
 CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 {
-	constexpr float EPSILON = 0.00001f;
+	constexpr double EPSILON = 0.00001;
 
-	float xDisEntry, yDisEntry, zDisEntry;
-	float xDisExit, yDisExit, zDisExit;
+	double xDisEntry, yDisEntry, zDisEntry;
+	double xDisExit, yDisExit, zDisExit;
 
-	glm::vec3 v = dynamic.getVelocity();
+	glm::vec<3, double, glm::packed_highp> v = dynamic.getVelocity();
 	HitBox dynaMHICC = dynamic.getHitBox();
 
 	// find the distance between the objects on the near and far sides for both x and y 
@@ -39,7 +39,7 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 		{
 			if (!(xDisEntry > 0 && xDisExit < 0))
 			{
-				return { 1.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+				return { 1.0f,  glm::vec<3, double, glm::packed_highp>(0.0f, 0.0f, 0.0f),  glm::vec<3, double, glm::packed_highp>(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
 			}
 		}
 	}
@@ -84,15 +84,15 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 			if (!(zDisEntry > 0 && zDisExit < 0))
 			{
 				//std::cout << "exit by z\n";
-				return { 1.0f, glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+				return { 1.0f,  glm::vec<3, double, glm::packed_highp>(0.0f, 0.0f, 0.0f),  glm::vec<3, double, glm::packed_highp>(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
 			}
 		}
 	}
 
 	//calculate times 
 
-	float xEntry, yEntry, zEntry;
-	float xExit, yExit, zExit;
+	double xEntry, yEntry, zEntry;
+	double xExit, yExit, zExit;
 
 	if (v.x == 0.0f)
 	{
@@ -129,10 +129,10 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 
 	//calculate last entry time and first exit time
 
-	float entryTime = std::max({ xEntry, yEntry, zEntry });
+	double entryTime = std::max({ xEntry, yEntry, zEntry });
 
-	float exitTime = std::min({ xExit, yExit, zExit });
-	float normalx, normaly, normalz;
+	double exitTime = std::min({ xExit, yExit, zExit });
+	double normalx, normaly, normalz;
 
 	// if there was no collision
 
@@ -143,7 +143,7 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 		normaly = 0.0f;
 		normalz = 0.0f;
 
-		return { 1.0f, glm::vec3(normalx, normaly, normalz), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+		return { 1.0f,  glm::vec<3, double, glm::packed_highp>(normalx, normaly, normalz),  glm::vec<3, double, glm::packed_highp>(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
 	}
 	else // if there was a collision 
 	{
@@ -194,6 +194,6 @@ CollisionInfo SweptAABB(const PhysicsObject& dynamic, const HitBox& staTHICC)
 			}
 		}
 
-		return { entryTime, glm::vec3(normalx, normaly, normalz), glm::vec3(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
+		return { entryTime,  glm::vec<3, double, glm::packed_highp>(normalx, normaly, normalz),  glm::vec<3, double, glm::packed_highp>(staTHICC.x + staTHICC.w / 2, staTHICC.y + staTHICC.h / 2, staTHICC.z + staTHICC.d / 2) };
 	}
 }

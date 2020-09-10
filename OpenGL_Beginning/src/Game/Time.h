@@ -18,5 +18,6 @@ namespace Time
 	void update();
 	double getGameTime();
 	double getDeltaGameTime();
+	double getDeltaRealGameTime();
 	Date getGameDate();
 }

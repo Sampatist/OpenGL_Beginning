@@ -1,8 +1,9 @@
 #include "Camera.h"
 #include "glm/trigonometric.hpp"
+#include <glm/detail/type_vec3.hpp>
 
-static	glm::vec3 Position(0.0f, 150.0f, 2.0f);
-static	glm::vec3 CameraAngle(0.0f, 0.0f, -1.0f);
+static	glm::vec<3, double, glm::packed_highp> Position(2000000000.0, 200.0, 2.0);
+static	glm::vec<3, double, glm::packed_highp> CameraAngle(0.0f, 0.0f, -1.0f);
 static	glm::vec3 InitialAngle(0.0f, 0.0f, -1.0f);
 
 void Camera::setAngle(float pitchAngle, float yawAngle)
@@ -20,17 +21,17 @@ void Camera::setAngle(float pitchAngle, float yawAngle)
     CameraAngle = yawRotationMatrix * pitchRotationMatrix  * InitialAngle;
 }
 
-void Camera::setPosition(glm::vec3 value)
+void Camera::setPosition(glm::vec<3, double, glm::packed_highp> value)
 {
     Position = value;
 }
 
-const glm::vec3& Camera::GetPosition()
+const glm::vec<3, double, glm::packed_highp>& Camera::GetPosition()
 {
     return Position;
 }
 
-const glm::vec3& Camera::GetCameraAngle()
+const glm::vec<3, double, glm::packed_highp>& Camera::GetCameraAngle()
 {
     return CameraAngle;
 }

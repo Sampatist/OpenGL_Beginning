@@ -24,10 +24,12 @@ public:
 
 	void SetUniform1f(const std::string& name, float vx);
 	void SetUniform3f(const std::string& name, float vx, float vy, float vz);
+	void SetUniform3d(const std::string& name, double vx, double vy, double vz);
 	void SetUniform1i(const std::string& name, int vx);
 	void SetUniform2i(const std::string& name, int vx, int vy);
 	void SetUniform4f(const std::string& name, float vx, float vy, float vz, float vw);
 	void SetUniformMatrix4f(const std::string& name, int num, GLboolean transposed, const GLfloat* value);
+	void SetUniformMatrix4d(const std::string& name, int num, GLboolean transposed, const GLdouble* value);
 private:
 	ShaderProgramSource ParseShader(const std::string& filePath);
 	unsigned int CompileShader(unsigned int type, const std::string& source);

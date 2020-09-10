@@ -14,10 +14,10 @@ namespace RayCast
 			int x, z, y;
 		};
 		bool hit;
-		float rayLength;
+		double rayLength;
 		glm::vec3 faceNormal;
 		Block block;
 	};
 
-	Info castRayAndGetTheInfoPlease(glm::vec3 pos, glm::vec3 dir, float rayLength, int limit);
+	Info castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit);
 }

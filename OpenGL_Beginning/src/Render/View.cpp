@@ -6,8 +6,8 @@
 #include "Chunk/Chunk.h"
 #include "inputs.h"
 
-static glm::mat4x4 viewMatrix;
-static glm::mat4x4 projectionMatrix;
+static glm::mat<4, 4, double, glm::packed_highp> viewMatrix;
+static glm::mat<4, 4, double, glm::packed_highp> projectionMatrix;
 static std::vector<glm::vec2> hull;
 
 static std::vector<glm::vec2> calculateHull(std::vector<glm::vec2> points)
@@ -56,17 +56,17 @@ static std::vector<glm::vec2> calculateHull(std::vector<glm::vec2> points)
 
 void ViewFrustum::initialize()
 {
-    viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
+    viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
     projectionMatrix = glm::perspective(glm::radians(Settings::fov), 16.0f/9.0f, Settings::ZNEAR, Settings::ZFAR);
     hull.reserve(8);
 }
 
-glm::mat4 ViewFrustum::getViewMatrix()
+glm::mat<4, 4, double, glm::packed_highp> ViewFrustum::getViewMatrix()
 {
 	return viewMatrix;
 }
 
-glm::mat4 ViewFrustum::getProjMatrix()
+glm::mat<4, 4, double, glm::packed_highp> ViewFrustum::getProjMatrix()
 {
     return projectionMatrix;
 }
@@ -76,24 +76,24 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
     std::vector<glm::vec2> points;
     points.reserve(8);
 
-    auto viewInverse = glm::inverse(glm::lookAt(Camera::GetPosition() - Camera::GetCameraAngle() * 32.0f, Camera::GetPosition(), glm::vec3(0.0f, 1.0f, 0.0f)));
+    auto viewInverse = glm::inverse(glm::lookAt(Camera::GetPosition() - Camera::GetCameraAngle() * 32.0, Camera::GetPosition(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f)));
     auto projInverse = glm::inverse(projectionMatrix);
 
-    glm::vec4 Point1 = viewInverse * projInverse * glm::vec4( 1.0f,  1.0f,  1.0f, 1.0f);
+    glm::vec<4, double, glm::packed_highp> Point1 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>( 1.0,  1.0,  1.0, 1.0);
     Point1 /= Point1.w;                                         
-    glm::vec4 Point2 = viewInverse * projInverse * glm::vec4( 1.0f,  1.0f, -1.0f, 1.0f); //
+    glm::vec<4, double, glm::packed_highp> Point2 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>( 1.0,  1.0, -1.0, 1.0); //
     Point2 /= Point2.w;                                           
-    glm::vec4 Point3 = viewInverse * projInverse * glm::vec4( 1.0f, -1.0f,  1.0f, 1.0f);
-    Point3 /= Point3.w;                                           
-    glm::vec4 Point4 = viewInverse * projInverse * glm::vec4( 1.0f, -1.0f, -1.0f, 1.0f); //
-    Point4 /= Point4.w;                                         
-    glm::vec4 Point5 = viewInverse * projInverse * glm::vec4(-1.0f,  1.0f,  1.0f, 1.0f);
-    Point5 /= Point5.w;                                             
-    glm::vec4 Point6 = viewInverse * projInverse * glm::vec4(-1.0f,  1.0f, -1.0f, 1.0f); //
-    Point6 /= Point6.w;                                             
-    glm::vec4 Point7 = viewInverse * projInverse * glm::vec4(-1.0f, -1.0f,  1.0f, 1.0f); //1
-    Point7 /= Point7.w;                                              
-    glm::vec4 Point8 = viewInverse * projInverse * glm::vec4(-1.0f, -1.0f, -1.0f, 1.0f); //2
+    glm::vec<4, double, glm::packed_highp> Point3 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>( 1.0, -1.0,  1.0, 1.0);
+    Point3 /= Point3.w;                            
+    glm::vec<4, double, glm::packed_highp> Point4 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>( 1.0, -1.0, -1.0, 1.0); //
+    Point4 /= Point4.w;                         
+    glm::vec<4, double, glm::packed_highp> Point5 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>(-1.0,  1.0,  1.0, 1.0);
+    Point5 /= Point5.w;                               
+    glm::vec<4, double, glm::packed_highp> Point6 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>(-1.0,  1.0, -1.0, 1.0); //
+    Point6 /= Point6.w;                              
+    glm::vec<4, double, glm::packed_highp> Point7 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>(-1.0, -1.0,  1.0, 1.0); //1
+    Point7 /= Point7.w;                            
+    glm::vec<4, double, glm::packed_highp> Point8 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>(-1.0, -1.0, -1.0, 1.0); //2
     Point8 /= Point8.w;
     //point7den  point8e giden line,, point7.x + (point8.x - point7.x)t, point7.y + (point8.y - point7.y)t, point7.z + (point8.z - point7.z)t;
     //if point8.y < 0 -> point7.y + (point8.y - point7.y)t=0 -> t = point7.y/(point7.y - point8.y) -> p78 = point8-point7 -> p78 = p78 * t
@@ -203,7 +203,7 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
 
 void ViewFrustum::update()
 {
-	viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec3(0.0f, 1.0f, 0.0f));
+	viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
     hull = calculateHull(calculateCameraPointsAndCastTo2D());
 }
 

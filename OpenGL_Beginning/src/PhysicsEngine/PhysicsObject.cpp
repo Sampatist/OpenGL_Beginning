@@ -7,23 +7,23 @@
 #include "Renderer.h"
 #include "Time.h"
 
-constexpr float dragCoef = 0.05f;
-const glm::vec3 gravity(0.0f, -0.5f, 0.0f);
-constexpr float MAXSPEED = 1.0f;
+constexpr double dragCoef = 0.15;
+const glm::vec<3, double, glm::packed_highp> gravity(0.0, -0.8, 0.0);
+constexpr double MAXSPEED = 100.0;
 
 void PhysicsObject::update()
 {
-	Renderer::drawDebugBox({ glm::vec3(position.x - this->hitbox.w / 2,position.y - this->hitbox.h / 2,position.z - this->hitbox.d / 2), hitbox.w, hitbox.h, hitbox.d, glm::vec3(1.0f, 0.0f, 0.7f) });
+	Renderer::drawDebugBox({ glm::vec<3, double, glm::packed_highp>(position.x - this->hitbox.w / 2,position.y - this->hitbox.h / 2,position.z - this->hitbox.d / 2), hitbox.w, hitbox.h, hitbox.d,  glm::vec<3, double, glm::packed_highp>(1.0f, 0.0f, 0.7f) });
 	
 	auto drag = 1 - pow(glm::length(velocity), 2) * dragCoef;
-	acceleration = (currentForce + (hasGravity ? gravity : glm::vec3(0.0f))) / mass * drag;
-	currentForce = glm::vec3(0);
+	acceleration = (((currentForce) / mass) + Time::getDeltaRealGameTime() * (hasGravity ? gravity : glm::vec<3, double, glm::packed_highp>(0.0f))) * drag;
+	currentForce = glm::vec<3, double, glm::packed_highp>(0);
 
-	velocity += acceleration * (float)Time::getDeltaGameTime() * (float)60;
+	velocity += acceleration * Time::getDeltaGameTime();
 
 	isOnGround = false;
 	int collisionCount = 0;
-	float remainingTime = 1.0f;
+	double remainingTime = 1.0f;
 
 	std::vector<HitBox> blocks = getBroadPhasedHitBoxes(*this);
 	int count = 0;
@@ -52,7 +52,7 @@ void PhysicsObject::update()
 			std::sort(infos.begin(), infos.end(), leastTimeSort);
 
 			CollisionInfo& firstCollisionInfo = infos.front();
-			float collisionTime = firstCollisionInfo.time;
+			double collisionTime = firstCollisionInfo.time;
 
 			if (remainingTime <= collisionTime)
 				break;
@@ -95,17 +95,17 @@ void PhysicsObject::update()
 		velocity = normalize(velocity) * MAXSPEED;
 }
 
-void PhysicsObject::addForce(glm::vec3 force)
+void PhysicsObject::addForce(glm::vec<3, double, glm::packed_highp> force)
 {
 	currentForce += force;
 } 
 
-glm::vec3 PhysicsObject::getPosition() const
+glm::vec<3, double, glm::packed_highp> PhysicsObject::getPosition() const
 {
 	return position;
 }
 
-glm::vec3 PhysicsObject::getVelocity() const
+glm::vec<3, double, glm::packed_highp> PhysicsObject::getVelocity() const
 {
 	return velocity;
 }

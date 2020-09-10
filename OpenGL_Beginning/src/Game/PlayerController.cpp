@@ -16,9 +16,9 @@ constexpr float SPEED_MULTIPLIER = 5.5f;  //dont know
 constexpr float YAW_ANGLE_UPPER_LIMIT = PI/2 - 0.1f;
 constexpr float YAW_ANGLE_LOWER_LIMIT = -PI/2 + 0.05f;
 
-static	glm::vec3 up_vector(0.0f, 1.0f, 0.0f);
-static	glm::vec3 right_vector(0.0f);
-static	glm::vec3 forward_vector(0.0f);
+static	glm::vec<3, double, glm::packed_highp> up_vector(0.0f, 1.0f, 0.0f);
+static	glm::vec<3, double, glm::packed_highp> right_vector(0.0f);
+static	glm::vec<3, double, glm::packed_highp> forward_vector(0.0f);
 
 static float mouseX = 0.0f;
 static float mouseY = 0.0f;
@@ -30,18 +30,18 @@ static bool isCreative = false;
 void PlayerController::update()
 {
 	//CAMERA
-	float deltaMouseX = inputManager::getInput(inputManager::Input::MOUSEX);
-	float deltaMouseY = inputManager::getInput(inputManager::Input::MOUSEY);
+	double deltaMouseX = inputManager::getInput(inputManager::Input::MOUSEX);
+	double deltaMouseY = inputManager::getInput(inputManager::Input::MOUSEY);
 
 	//MOVEMENT
-	float right = inputManager::getInput(inputManager::Input::RIGHT);
-	float forward = inputManager::getInput(inputManager::Input::FORWARD);
-	float fly = inputManager::getInput(inputManager::Input::FLY);
-	float shift = inputManager::getInput(inputManager::Input::SHIFT);
+	double right = inputManager::getInput(inputManager::Input::RIGHT);
+	double forward = inputManager::getInput(inputManager::Input::FORWARD);
+	double fly = inputManager::getInput(inputManager::Input::FLY);
+	double shift = inputManager::getInput(inputManager::Input::SHIFT);
 
 	//MOUSE ACTION
-	float mouseLeft = inputManager::getInput(inputManager::Input::MOUSELEFT);
-	float mouseRight = inputManager::getInput(inputManager::Input::MOUSERIGHT);
+	double mouseLeft = inputManager::getInput(inputManager::Input::MOUSELEFT);
+	double mouseRight = inputManager::getInput(inputManager::Input::MOUSERIGHT);
 
 	if(mouseLeft)
 	{
@@ -147,16 +147,17 @@ void PlayerController::update()
 		isCreative = false;
 	}
 
-	glm::vec3 force(0.0f, 0.0f, 0.0f);
-	float jump = fly * 8.0f;
-	if (player.groundTime < 5)
+	glm::vec<3, double, glm::packed_highp> force(0.0f, 0.0f, 0.0f);
+	double jump = fly * 8.0f;
+	if (player.groundTime < 5 && !isCreative)
 		jump = 0;
 	if (player.isOnGround || isCreative)
-		force = right_vector * right + forward_vector * forward + up_vector * jump - (29.0f / 30.0f) * up_vector * jump * float(isCreative);
+		force = right_vector * right + forward_vector * forward + up_vector * jump - (29.0 / 30.0) * up_vector * jump * double(isCreative);
 	else
-		force = (right_vector * right + forward_vector * forward) / 5.0f;
-
+		force = (right_vector * right + forward_vector * forward) / 5.0;
+	if (isCreative)
+		force *= 3;
 	player.addForce(force);
 	player.update();
-	Camera::setPosition(player.getPosition() + glm::vec3(0.0f, 0.75f, 0.0f));
+	Camera::setPosition(player.getPosition() + glm::vec<3, double, glm::packed_highp>(0.0, 0.75, 0.0));
 }

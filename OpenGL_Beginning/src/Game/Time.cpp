@@ -13,6 +13,7 @@ constexpr float GAME_SECOND_RATIO = 72;
 void Time::intilaize()
 {
     gameStart = std::chrono::system_clock::now();
+    lastRecordedClock = gameStart;
 }
 
 void Time::update()
@@ -20,7 +21,6 @@ void Time::update()
     currentTimeClock = std::chrono::system_clock::now();
     delta = (currentTimeClock - lastRecordedClock).count() / 10000000.0f;
     gameRealSeconds = (currentTimeClock - gameStart).count() / 10000000.0f;
-    std::cout << gameRealSeconds << std::endl;
     lastRecordedClock = currentTimeClock; 
 }
 
@@ -30,6 +30,11 @@ double Time::getGameTime()
 }
 
 double Time::getDeltaGameTime()
+{
+    return delta * GAME_SECOND_RATIO;
+}
+
+double Time::getDeltaRealGameTime()
 {
     return delta;
 }

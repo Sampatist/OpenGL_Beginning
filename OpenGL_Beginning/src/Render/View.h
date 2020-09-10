@@ -9,8 +9,8 @@ namespace ViewFrustum
 {
 	void initialize();
 	void update();
-	glm::mat4 getViewMatrix();
-	glm::mat4 getProjMatrix();
+	glm::mat<4, 4, double, glm::packed_highp> getViewMatrix();
+	glm::mat<4, 4, double, glm::packed_highp> getProjMatrix();
 	bool contains2D(glm::vec2 pos);
 }
 

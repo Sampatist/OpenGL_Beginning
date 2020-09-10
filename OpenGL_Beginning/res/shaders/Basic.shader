@@ -1,5 +1,5 @@
 #shader vertex
-#version 330 core
+#version 400 core
 
 layout(location = 0) in int data;
 
@@ -10,11 +10,11 @@ flat out int id;
 flat out int n;
 
 uniform mat4 u_Model;
-uniform mat4 u_View;
-uniform mat4 u_Projection;
+uniform dmat4 u_View;
+uniform dmat4 u_Projection;
 uniform ivec2 u_ChunkOffset;
-uniform vec3 u_CamPos;
-uniform mat4 u_SunViewProjectionMatrix;
+uniform dvec3 u_CamPos;
+uniform dmat4 u_SunViewProjectionMatrix;
 
 const vec3 NORMALS[6] = vec3[6](
 	vec3(-0.7f,0.0f,0.0f),
@@ -34,14 +34,14 @@ void main()
 	int normalIndex = ((data >> 27) & 0x7);
 	n = normalIndex;
 	normal = NORMALS[normalIndex];
-	vec3 position = vec3(x, y, z);
-	camDir = u_CamPos - position;
-	fragPosSunViewSpace = u_SunViewProjectionMatrix * vec4(position.xyz, 1.0f);
-	gl_Position =  u_Projection * u_View * vec4(position.xyz, 1.0f);
+	dvec3 position = dvec3(x, y, z);
+	camDir = vec3(u_CamPos - position);
+	fragPosSunViewSpace = vec4(u_SunViewProjectionMatrix * dvec4(position.xyz, 1.0f));
+	gl_Position = vec4(u_Projection * u_View * dvec4(position.xyz, 1.0f));
 };
 
 #shader fragment
-#version 330 core
+#version 400 core
 
 in vec3 normal;
 in vec3 camDir;

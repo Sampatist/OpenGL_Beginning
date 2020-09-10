@@ -8,11 +8,11 @@ namespace Renderer
 {
 	struct DrawableBox
 	{
-		glm::vec3 pos;
-		float w;
-		float h;
-		float d;
-		glm::vec3 color;
+		glm::vec<3, double, glm::packed_highp> pos;
+		double w;
+		double h;
+		double d;
+		glm::vec<3, double, glm::packed_highp> color;
 	};
 
 	struct DrawableLine

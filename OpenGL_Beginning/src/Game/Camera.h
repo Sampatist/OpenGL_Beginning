@@ -4,7 +4,7 @@
 
 namespace Camera {
 	void setAngle(float pitch, float yaw);
-	void setPosition(glm::vec3 value);
-	const glm::vec3& GetPosition();
-	const glm::vec3& GetCameraAngle();
+	void setPosition(glm::vec<3, double, glm::packed_highp> value);
+	const glm::vec<3, double, glm::packed_highp>& GetPosition();
+	const glm::vec<3, double, glm::packed_highp>& GetCameraAngle();
 };
