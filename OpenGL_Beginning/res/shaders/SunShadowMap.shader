@@ -11,7 +11,7 @@ void main()
 	int x = (data & 0x1F) + u_ChunkOffset.x;
 	int z = ((data >> 5) & 0x1F) + u_ChunkOffset.y;
 	int y = ((data >> 10) & 0x1FF);
-	vec3 position = vec3(x, y, z);
+	dvec3 position = dvec3(x, y, z);
 	gl_Position =  vec4(u_SunViewProjectionMatrix * dvec4(position.xyz, 1.0f));
 };
 

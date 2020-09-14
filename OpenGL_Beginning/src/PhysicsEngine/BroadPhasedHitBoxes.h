@@ -2,6 +2,7 @@
 #include <vector>
 #include "Swept_AABB.h"
 #include "Chunk/ChunkManager.h"
+#include "Chunk/IsTerrainReady.h"
 
 std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 {
@@ -36,16 +37,18 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 				chunkBlockZ = chunkBlockZ + (chunkBlockZ < 0) * CHUNK_LENGTH;
 				int chunkBlockY = k;
 				std::pair<int, int> chunkLocation(chunkX, chunkZ);
-				ChunkManager::loadedChunksLock.lock();
-				if(auto chunk = ChunkManager::lock_getChunk(chunkLocation))
-				{
 
+				
+ 				if(IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.load())
+				{
+					ChunkManager::loadedChunksLock.lock();
+					auto chunk = ChunkManager::lock_getChunk(chunkLocation);
 					if(auto blockID = chunk->getBlock(chunkBlockX, chunkBlockZ, chunkBlockY))
 					{
 						hitboxes.push_back({ (double)i,(double)k,(double)j,1.0f,1.0f,1.0f });
 					}
+					ChunkManager::loadedChunksLock.unlock();
 				}
-				ChunkManager::loadedChunksLock.unlock();
 			}
 		}
 	}

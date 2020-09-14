@@ -1119,3 +1119,6 @@ constexpr std::array<int, 61> chunkCountLookup =
 	9141, 9465, 9841, 10185, 10545, 10909,
 	11277, 11289
 };
+
+//x, y ->  x^2+y^2<z^2 if true it gives 1
+//x, y ->  x^2+y^2<(z+1)^2 if z is positive it gives 1 for the same x's. 0<2z+1 it is true for z >= 0

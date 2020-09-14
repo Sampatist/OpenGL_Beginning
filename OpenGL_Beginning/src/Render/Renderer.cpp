@@ -579,7 +579,9 @@ void Renderer::draw()
     glViewport(0, 0, 4096, 4096);
     glClear(GL_DEPTH_BUFFER_BIT);
     glEnable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
     drawShadowMap(svpm);
+    glEnable(GL_CULL_FACE);
 
     // Render to the screen
     glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);

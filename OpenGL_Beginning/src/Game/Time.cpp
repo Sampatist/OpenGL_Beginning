@@ -26,7 +26,7 @@ void Time::update()
 
 double Time::getGameTime()
 {
-    return gameRealSeconds * GAME_SECOND_RATIO + (double)12 * (double)60 * (double)60;
+    return gameRealSeconds * GAME_SECOND_RATIO + (double)17 * (double)60 * (double)60;
 }
 
 double Time::getDeltaGameTime()

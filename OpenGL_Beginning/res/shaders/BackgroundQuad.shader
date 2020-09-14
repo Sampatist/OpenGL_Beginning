@@ -26,7 +26,7 @@ void main()
 };
 
 #shader fragment
-#version 330 core
+#version 400 core
 
 in vec3 viewRay;
 in vec3 rotatedSkyBoxSampleVector;
@@ -34,7 +34,7 @@ in vec3 rotatedSkyBoxSampleVector;
 layout(location = 0) out vec4 color;
 
 uniform vec3 u_lightDir;
-uniform vec3 u_CamPos;
+uniform dvec3 u_CamPos;
 uniform sampler2D u_gColor;
 uniform sampler2D u_gDepth;
 uniform samplerCube u_StarTexture;
@@ -140,7 +140,7 @@ void main()
 	vec4 sunOuter = max(pow((dot(d2, u_lightDir)), 8), 0) * vec4(0.8, 0.8, 0.4, 1.0f) / 4 * float(z_e > 900);
 	dirToSun = u_lightDir;
 
-	vec3 rayOrigin = u_CamPos;
+	vec3 rayOrigin = vec3(u_CamPos);
 	planetCentre = vec3(u_CamPos.x, -10000, u_CamPos.z);
 	vec2 hitInfo = raySphere(planetCentre, atmosphereRadius, rayOrigin, nViewRay);
 	

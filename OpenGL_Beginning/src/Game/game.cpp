@@ -6,6 +6,7 @@
 #include "View.h"
 #include "PhysicsEngine/PhysicalObjects.h"
 #include "Shadows.h"
+#include "Chunk/IsTerrainReady.h"
 
 void Game::initialize()
 {
@@ -14,6 +15,8 @@ void Game::initialize()
 	ViewFrustum::initialize();
 	Renderer::initialize();
 	inputManager::initialize();
+
+	IsTerrainManager::initilaizeIsTerrain();
 	ChunkManager::start();
 }
 

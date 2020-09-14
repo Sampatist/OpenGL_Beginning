@@ -148,7 +148,7 @@ void PlayerController::update()
 	}
 
 	glm::vec<3, double, glm::packed_highp> force(0.0f, 0.0f, 0.0f);
-	double jump = fly * 8.0f;
+	double jump = fly * 10.0f;
 	if (player.groundTime < 5 && !isCreative)
 		jump = 0;
 	if (player.isOnGround || isCreative)
