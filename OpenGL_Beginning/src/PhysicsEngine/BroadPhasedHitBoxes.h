@@ -36,7 +36,7 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 				chunkBlockZ = chunkBlockZ + (chunkBlockZ < 0) * CHUNK_LENGTH;
 				int chunkBlockY = k;
 				std::pair<int, int> chunkLocation(chunkX, chunkZ);
-				ChunkManager::loadedChunksLock.lock();
+				//ChunkManager::loadedChunksLock.lock();
 				if(auto chunk = ChunkManager::lock_getChunk(chunkLocation))
 				{
 
@@ -45,7 +45,7 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 						hitboxes.push_back({ (double)i,(double)k,(double)j,1.0f,1.0f,1.0f });
 					}
 				}
-				ChunkManager::loadedChunksLock.unlock();
+				//ChunkManager::loadedChunksLock.unlock();
 			}
 		}
 	}
