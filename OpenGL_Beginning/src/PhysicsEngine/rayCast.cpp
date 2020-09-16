@@ -69,7 +69,7 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 		int rayChunkZ = floor(double(rayBlockZ) / CHUNK_LENGTH);
 		std::pair<int, int> location(rayChunkX, rayChunkZ);
 
-		if(IsTerrainManager::IsTerrainReady.at(location).loaded.load())
+		if(IsTerrainManager::isChunkCreatedAndLoaded(location))
 		{
 			int blockChunkX = rayBlockX % CHUNK_WIDTH;
 			blockChunkX = blockChunkX + (blockChunkX < 0) * CHUNK_WIDTH;

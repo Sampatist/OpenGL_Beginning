@@ -12,6 +12,7 @@ private:
 	int x, z, y;
 	std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> blocks;
 public:
+	const uint8_t* getBlocks() const { return blocks.data(); };
 	bool isMeshReady = false;
 	int getX() const { return x; };
 	int getZ() const { return z; };

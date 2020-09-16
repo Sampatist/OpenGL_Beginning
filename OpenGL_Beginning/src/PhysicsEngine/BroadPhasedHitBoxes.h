@@ -39,7 +39,7 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 				std::pair<int, int> chunkLocation(chunkX, chunkZ);
 
 				
- 				if(IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.load())
+ 				if(IsTerrainManager::isChunkCreatedAndLoaded(chunkLocation))
 				{
 					ChunkManager::loadedChunksLock.lock();
 					auto chunk = ChunkManager::lock_getChunk(chunkLocation);

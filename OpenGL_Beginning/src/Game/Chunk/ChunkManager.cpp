@@ -14,6 +14,7 @@
 #include <queue>
 #include <unordered_set>
 #include "IsTerrainReady.h"
+#include "Serialization/readWritendParty.h"
 
 static std::unordered_map<std::pair<int, int>, std::unique_ptr<Chunk>, hash_pair> loadedChunksMap;
 
@@ -37,6 +38,22 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
         {
 			IsTerrainManager::IsTerrainReady.at(it->first).unLoaded.store(true);
+			if (chunk.getX() == 0 && chunk.getZ() == 0)
+			{
+				std::unordered_map<int, std::string> chunkSaveData;
+				
+				char* compressed = new char[16 * 16 * 256];
+				{
+					int sizecompressed = LZ4_compress_default((const char*)(chunk.getBlocks()), compressed, 16 * 16 * 256, 16 * 16 * 256);
+					std::string str(compressed, sizecompressed);
+					chunkSaveData[0] = str;
+
+					std::ofstream os("res/saveFiles/deneme", std::ios::binary);
+					cereal::BinaryOutputArchive archive(os);
+					archive(chunkSaveData);
+				}
+				delete[] compressed;
+			}
 			ChunkManager::loadedChunksLock.lock();
             it = loadedChunksMap.erase(it);
 			ChunkManager::loadedChunksLock.unlock();

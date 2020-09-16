@@ -15,9 +15,11 @@ namespace IsTerrainManager
 {
 	inline std::unordered_map<std::pair<int, int>, IsTerrain, hash_pair> IsTerrainReady;
 	inline void createLoadableChunks(int cameraChunkX, int cameraChunkZ) {
+
 		int chunkCount = 0;
 		int chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
 		int chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
+
 		for (chunkCount; chunkCount < chunkCountLookup[Settings::viewDistance]; chunkCount++)
 		{
 			chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
@@ -51,5 +53,8 @@ namespace IsTerrainManager
 		std::cout << initialCameraChunkX << ", " << initialCameraChunkZ << std::endl;
 
 		createLoadableChunks(initialCameraChunkX, initialCameraChunkZ);
+	}
+	inline bool isChunkCreatedAndLoaded(std::pair<int, int> chunkLocation) {
+		return IsTerrainManager::IsTerrainReady.count(chunkLocation) && IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.load() && !IsTerrainManager::IsTerrainReady.at(chunkLocation).unLoaded.load();
 	}
 }
