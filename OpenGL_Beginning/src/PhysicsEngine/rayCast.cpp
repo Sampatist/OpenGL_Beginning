@@ -68,7 +68,7 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 		int rayChunkZ = floor(double(rayBlockZ) / CHUNK_LENGTH);
 		std::pair<int, int> location(rayChunkX, rayChunkZ);
 
-		//ChunkManager::loadedChunksLock.lock();
+		ChunkManager::loadedChunksLock.lock();
 		if(auto chunk = ChunkManager::lock_getChunk(location)) 
 		{
 			int blockChunkX = rayBlockX % CHUNK_WIDTH;
@@ -78,14 +78,14 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 
 			if (int blockID = chunk->getBlock(blockChunkX, blockChunkZ, rayBlockY))
 			{
-				//ChunkManager::loadedChunksLock.unlock();
+				ChunkManager::loadedChunksLock.unlock();
 				return { true, length, hitNormal, {blockID, std::pair<int, int>(rayChunkX, rayChunkZ), blockChunkX, blockChunkZ, rayBlockY} };
 			}
-			//ChunkManager::loadedChunksLock.unlock();
+			ChunkManager::loadedChunksLock.unlock();
 		}
 		else
 		{
-			//ChunkManager::loadedChunksLock.unlock();
+			ChunkManager::loadedChunksLock.unlock();
 			break;
 		}
 	}

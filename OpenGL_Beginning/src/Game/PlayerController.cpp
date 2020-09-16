@@ -148,7 +148,7 @@ void PlayerController::update()
 	}
 
 	glm::vec<3, double, glm::packed_highp> force(0.0f, 0.0f, 0.0f);
-	double jump = fly * 10.0f;
+	double jump = fly * 8.0f;
 	if (player.groundTime < 5 && !isCreative)
 		jump = 0;
 	if (player.isOnGround || isCreative)
@@ -156,7 +156,7 @@ void PlayerController::update()
 	else
 		force = (right_vector * right + forward_vector * forward) / 5.0;
 	if (isCreative)
-		force *= 5;
+		force *= 3;
 	player.addForce(force);
 	player.update();
 	Camera::setPosition(player.getPosition() + glm::vec<3, double, glm::packed_highp>(0.0, 0.75, 0.0));
