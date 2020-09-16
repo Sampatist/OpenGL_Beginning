@@ -19,7 +19,9 @@ void PhysicsObject::update()
 	acceleration = (((currentForce) / mass) + Time::getDeltaRealGameTime() * (hasGravity ? gravity : glm::vec<3, double, glm::packed_highp>(0.0f))) * drag;
 	currentForce = glm::vec<3, double, glm::packed_highp>(0);
 
-	velocity += acceleration * Time::getDeltaGameTime();
+	velocity.x += acceleration.x * Time::getDeltaGameTime();
+	velocity.z += acceleration.z * Time::getDeltaGameTime();
+	velocity.y += acceleration.y;
 
 	isOnGround = false;
 	int collisionCount = 0;

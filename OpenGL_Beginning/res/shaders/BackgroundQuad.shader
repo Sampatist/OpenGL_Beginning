@@ -6,14 +6,14 @@ layout(location = 0) in vec3 position;
 out vec3 viewRay;
 out vec3 rotatedSkyBoxSampleVector;
 
-uniform dmat4 u_projMatrix;
-uniform dmat4 u_viewMatrix;
+uniform mat4 u_projMatrix;
+uniform mat4 u_viewMatrix;
 uniform vec3 u_lightDir;
 uniform vec3 u_SunBinormal;
 
 void main()
 {
-	dvec4 viewSpaceCoord = inverse(u_projMatrix) * dvec4(position.xy, -1.0f, 1.0f);
+	vec4 viewSpaceCoord = inverse(u_projMatrix) * vec4(position.xy, -1.0f, 1.0f);
 	viewSpaceCoord = vec4(viewSpaceCoord.xy, -1.0f, 0.0f);
 	viewRay = vec3((inverse(u_viewMatrix) * viewSpaceCoord).xyz);
 	vec3 nViewRay = normalize(viewRay);
@@ -26,7 +26,7 @@ void main()
 };
 
 #shader fragment
-#version 330 core
+#version 400 core
 
 in vec3 viewRay;
 in vec3 rotatedSkyBoxSampleVector;
@@ -140,6 +140,8 @@ void main()
 	vec4 sunOuter = max(pow((dot(d2, u_lightDir)), 8), 0) * vec4(0.8, 0.8, 0.4, 1.0f) / 4 * float(z_e > 900);
 	dirToSun = u_lightDir;
 
+	//ATHMOSPHERE START /-/-/-/-/-/-/
+
 	vec3 rayOrigin = u_CamPos;
 	planetCentre = vec3(u_CamPos.x, -10000, u_CamPos.z);
 	vec2 hitInfo = raySphere(planetCentre, atmosphereRadius, rayOrigin, nViewRay);
@@ -162,6 +164,11 @@ void main()
 	{
 		finalColor = texColor + sun + sunOuter;
 	}
+
+	//ATHMOSPHERE END /-/-/-/-/-/-/
+	//finalColor = texColor + sun + sunOuter;
+
+
 	//efsane bu yöntem... performans açýsýndan da iyi
 	if(texture(u_gColor, texCoord) == 0)
 		finalColor += texture(u_StarTexture, rotatedSkyBoxSampleVector)  * clamp(1 - (length(finalColor) * (1.0f/minColorStars)), 0.0f, 1.0f); // looks great but still problematic since it also works for blocks I mean it wont be a problem since there is ambient light everywhere but it is edgy

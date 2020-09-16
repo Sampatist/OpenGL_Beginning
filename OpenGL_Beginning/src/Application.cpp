@@ -12,6 +12,8 @@
 #include "glm/vec2.hpp"
 #include "glm/geometric.hpp"
 
+#include "Serialization/readWritendParty.h"
+
 int main(void)
 {
     //spedTest for efficient chunk drawing
@@ -45,8 +47,11 @@ int main(void)
     //std::chrono::duration<double> elapsed_seconds = std::chrono::system_clock::now()-start;
     //std::cout << elapsed_seconds.count()*1000 << std::endl;
     //
+
+    //Serialize::writendreadTests();
     //return 0;
-    std::this_thread::sleep_for(std::chrono::seconds(5));
+
+    //std::this_thread::sleep_for(std::chrono::seconds(5));
 
     Game::initialize();
 

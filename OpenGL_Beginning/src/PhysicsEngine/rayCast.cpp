@@ -1,4 +1,5 @@
 #include "rayCast.h"
+#include "Chunk/IsTerrainReady.h"
 
 RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit = 30)
 {
@@ -23,13 +24,13 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 		minZ = 0;
 		minY = 0;
 		//minX
-		minX = (dir.x > 0 ? rayBlockX + 1 - pos.x : pos.x - rayBlockX) / abs(dir.x);
+		minX = (dir.x > 0 ? rayBlockX + 1. - pos.x : pos.x - rayBlockX) / abs(dir.x);
 
 		//minZ
-		minZ = (dir.z > 0 ? rayBlockZ + 1 - pos.z : pos.z - rayBlockZ) / abs(dir.z);
+		minZ = (dir.z > 0 ? rayBlockZ + 1. - pos.z : pos.z - rayBlockZ) / abs(dir.z);
 
 		//minY 
-		minY = (dir.y > 0 ? rayBlockY + 1 - pos.y : pos.y - rayBlockY) / abs(dir.y);
+		minY = (dir.y > 0 ? rayBlockY + 1. - pos.y : pos.y - rayBlockY) / abs(dir.y);
 
 		double minStep = 0;
 
@@ -55,7 +56,7 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 		glm::vec<3, double, glm::packed_highp> translate = dir * minStep;
 		length += glm::length(translate);
 		pos += translate;
-		if(abs(pos.y - (CHUNK_HEIGHT / 2.0f - 0.5)) > (CHUNK_HEIGHT / 2.0f - 0.5) || abs(double(rayBlockY) - (CHUNK_HEIGHT / 2 - 0.5)) > (CHUNK_HEIGHT / 2 - 0.5))
+		if(abs(pos.y - (CHUNK_HEIGHT / 2.0 - 0.5)) > (CHUNK_HEIGHT / 2.0 - 0.5) || abs(double(rayBlockY) - (CHUNK_HEIGHT / 2 - 0.5)) > (CHUNK_HEIGHT / 2 - 0.5))
 		{
 			break;
 		}
@@ -68,24 +69,24 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 		int rayChunkZ = floor(double(rayBlockZ) / CHUNK_LENGTH);
 		std::pair<int, int> location(rayChunkX, rayChunkZ);
 
-		ChunkManager::loadedChunksLock.lock();
-		if(auto chunk = ChunkManager::lock_getChunk(location)) 
+		if(IsTerrainManager::isChunkCreatedAndLoaded(location))
 		{
 			int blockChunkX = rayBlockX % CHUNK_WIDTH;
 			blockChunkX = blockChunkX + (blockChunkX < 0) * CHUNK_WIDTH;
 			int blockChunkZ = rayBlockZ % CHUNK_LENGTH;
 			blockChunkZ = blockChunkZ + (blockChunkZ < 0) * CHUNK_LENGTH;
 
+			//POSSIBLE PROBLEM WITH LOCK LINE 82 -> LINE 87
+			//ChunkManager::loadedChunksLock.lock();
+			auto chunk = ChunkManager::lock_getChunk(location);
+			//ChunkManager::loadedChunksLock.unlock();
 			if (int blockID = chunk->getBlock(blockChunkX, blockChunkZ, rayBlockY))
 			{
-				ChunkManager::loadedChunksLock.unlock();
 				return { true, length, hitNormal, {blockID, std::pair<int, int>(rayChunkX, rayChunkZ), blockChunkX, blockChunkZ, rayBlockY} };
 			}
-			ChunkManager::loadedChunksLock.unlock();
 		}
 		else
 		{
-			ChunkManager::loadedChunksLock.unlock();
 			break;
 		}
 	}

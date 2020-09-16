@@ -86,7 +86,7 @@ void PlayerController::update()
 		RayCast::Info info = BlockEdit::getCurrentRayInfo();
 		
 		//std::pair<int, int> location(info.block.chunkLocation.first, info.block.chunkLocation.second);
-		std::cout << "Block pos: " << info.block.x << " " << info.block.z << " " <<  info.block.y << std::endl; 
+		std::cout << "Chunk: (" << info.block.chunkLocation.first << ", " << info.block.chunkLocation.second << ")\n"<< "Block pos: " << info.block.x << " " << info.block.z << " " <<  info.block.y << std::endl;
 		
 
 		//if (info.hit)
@@ -148,7 +148,7 @@ void PlayerController::update()
 	}
 
 	glm::vec<3, double, glm::packed_highp> force(0.0f, 0.0f, 0.0f);
-	double jump = fly * 8.0f;
+	double jump = fly * 10.0f;
 	if (player.groundTime < 5 && !isCreative)
 		jump = 0;
 	if (player.isOnGround || isCreative)
