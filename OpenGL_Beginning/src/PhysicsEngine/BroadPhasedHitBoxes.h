@@ -41,13 +41,14 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 				
  				if(IsTerrainManager::isChunkCreatedAndLoaded(chunkLocation))
 				{
-					ChunkManager::loadedChunksLock.lock();
+					//POSSIBLE PROBLEM WITH LOCK LINE 47 -> LINE 51
+					//ChunkManager::loadedChunksLock.lock();
 					auto chunk = ChunkManager::lock_getChunk(chunkLocation);
+					//ChunkManager::loadedChunksLock.unlock();
 					if(auto blockID = chunk->getBlock(chunkBlockX, chunkBlockZ, chunkBlockY))
 					{
 						hitboxes.push_back({ (double)i,(double)k,(double)j,1.0f,1.0f,1.0f });
 					}
-					ChunkManager::loadedChunksLock.unlock();
 				}
 			}
 		}

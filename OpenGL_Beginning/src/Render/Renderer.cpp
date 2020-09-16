@@ -135,11 +135,13 @@ void Renderer::initialize()
 
     glm::mat4 modelMatrix(1.0f);
     glm::mat<4, 4, double, glm::packed_highp> projectionMatrix = ViewFrustum::getProjMatrix();
+    static glm::mat4x4 _projectionMatrix;
+    _projectionMatrix = projectionMatrix;
 
     Shaders::getBackgroundQuadShader().Bind();
-    Shaders::getBackgroundQuadShader().SetUniformMatrix4d("u_projMatrix", 1, GL_FALSE, &projectionMatrix[0][0]);
+    Shaders::getBackgroundQuadShader().SetUniformMatrix4f("u_projMatrix", 1, GL_FALSE, &_projectionMatrix[0][0]);
     Shaders::getChunkShader().Bind();
-    Shaders::getChunkShader().SetUniformMatrix4d("u_Projection", 1, GL_FALSE, &projectionMatrix[0][0]);
+    Shaders::getChunkShader().SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &_projectionMatrix[0][0]);
     Shaders::getChunkShader().SetUniformMatrix4f("u_Model", 1, GL_FALSE, &modelMatrix[0][0]);
     Shaders::getChunkShader().SetUniform1f("u_ChunkDistance", Settings::viewDistance);
 
@@ -405,10 +407,12 @@ void Renderer::bufferChunks()
 
 static void drawBackground(glm::vec<3, double, glm::packed_highp>& camPos, glm::vec<3, double, glm::packed_highp>& camDir,glm::vec3& lightDir, glm::mat<4, 4, double, glm::packed_highp>& viewMatrix)
 {
+    static glm::mat4x4 _viewMatrix;
+    _viewMatrix = viewMatrix;
     Shaders::getBackgroundQuadShader().Bind();
     Shaders::getBackgroundQuadShader().SetUniform3d("u_CamPos", camPos.x, camPos.y, camPos.z);
     Shaders::getBackgroundQuadShader().SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
-    Shaders::getBackgroundQuadShader().SetUniformMatrix4d("u_viewMatrix", 1, GL_FALSE, &viewMatrix[0][0]);
+    Shaders::getBackgroundQuadShader().SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &_viewMatrix[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), nullptr);
@@ -418,7 +422,9 @@ static void drawBackground(glm::vec<3, double, glm::packed_highp>& camPos, glm::
 static void drawShadowMap(glm::mat<4, 4, double, glm::packed_highp>& svpm)
 {
     Shaders::getSunShadowMapShader().Bind();
-    Shaders::getSunShadowMapShader().SetUniformMatrix4d("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
+    static glm::mat4x4 _svpm;
+    _svpm = svpm;
+    Shaders::getSunShadowMapShader().SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &_svpm[0][0]);
 
     for (auto pair : drawableMeshes)
     {
@@ -441,14 +447,17 @@ static void drawShadowMap(glm::mat<4, 4, double, glm::packed_highp>& svpm)
 
 static void drawChunks(glm::vec<3, double, glm::packed_highp>& camPos, glm::vec<3, double, glm::packed_highp>& camDir,glm::vec3& lightDir, glm::vec3& lightDirForw, glm::vec3& lightDirBackw, glm::mat<4, 4, double, glm::packed_highp>& viewMatrix, glm::mat<4, 4, double, glm::packed_highp>& svpm)
 {
-
+    static glm::mat4x4 _viewMatrix;
+    static glm::mat4x4 _svpm;
+    _viewMatrix = viewMatrix;
+    _svpm = svpm;
     Shaders::getChunkShader().Bind();
     Shaders::getChunkShader().SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
     Shaders::getChunkShader().SetUniform3f("u_lightDirForw", lightDirForw.x, lightDirForw.y, lightDirForw.z);
     Shaders::getChunkShader().SetUniform3f("u_lightDirBackw", lightDirBackw.x, lightDirBackw.y, lightDirBackw.z);
-    Shaders::getChunkShader().SetUniformMatrix4d("u_View", 1, GL_FALSE, &viewMatrix[0][0]);
-    Shaders::getChunkShader().SetUniform3d("u_CamPos", camPos.x, camPos.y, camPos.z);
-    Shaders::getChunkShader().SetUniformMatrix4d("u_SunViewProjectionMatrix", 1, GL_FALSE, &svpm[0][0]);
+    Shaders::getChunkShader().SetUniformMatrix4f("u_View", 1, GL_FALSE, &_viewMatrix[0][0]);
+    Shaders::getChunkShader().SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
+    Shaders::getChunkShader().SetUniformMatrix4f("u_SunViewProjectionMatrix", 1, GL_FALSE, &_svpm[0][0]);
 
     for (auto pair : drawableMeshes)
     {
@@ -456,8 +465,8 @@ static void drawChunks(glm::vec<3, double, glm::packed_highp>& camPos, glm::vec<
         std::pair<int, int> chunkLocation = pair.first;
 
         glm::vec2 chunkLocationVec2 = glm::vec2(chunkLocation.first * 16 + 8, chunkLocation.second* 16 + 8);
-        //if (!ViewFrustum::contains2D(chunkLocationVec2))
-        //    continue;
+        if (!ViewFrustum::contains2D(chunkLocationVec2))
+            continue;
         if (drawableMesh.bufferSize == 0)
             continue;
 
@@ -592,16 +601,16 @@ void Renderer::draw()
     glViewport(0, 0, 1600, 900);
     drawChunks(camPos, camDir, lightDir, lightDirF, lightDirB, viewMatrix, svpm);
 
-    // Debug stuff
-    glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
-    glDisable(GL_DEPTH_TEST);
-    glViewport(0, 0, 1600, 900);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
-    glDisable(GL_CULL_FACE);
-    glLineWidth(2);
-    drawDebug(viewMatrix);
-    glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
-    glEnable(GL_CULL_FACE);
+    //// Debug stuff
+    //glBindFramebuffer(GL_FRAMEBUFFER, gBuffer);
+    //glDisable(GL_DEPTH_TEST);
+    //glViewport(0, 0, 1600, 900);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+    //glDisable(GL_CULL_FACE);
+    //glLineWidth(2);
+    //drawDebug(viewMatrix);
+    //glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+    //glEnable(GL_CULL_FACE);
 
     // Render background quad
     glBindFramebuffer(GL_FRAMEBUFFER, 0);

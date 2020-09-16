@@ -86,7 +86,7 @@ void PlayerController::update()
 		RayCast::Info info = BlockEdit::getCurrentRayInfo();
 		
 		//std::pair<int, int> location(info.block.chunkLocation.first, info.block.chunkLocation.second);
-		std::cout << "Block pos: " << info.block.x << " " << info.block.z << " " <<  info.block.y << std::endl; 
+		std::cout << "Chunk: (" << info.block.chunkLocation.first << ", " << info.block.chunkLocation.second << ")\n"<< "Block pos: " << info.block.x << " " << info.block.z << " " <<  info.block.y << std::endl;
 		
 
 		//if (info.hit)

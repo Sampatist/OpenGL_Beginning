@@ -47,20 +47,22 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 	{
 		posXChunk = loadedChunksMap.at(posXpair).get();
 	}										    
-	else
-	{
-		posXChunk = new Chunk(chunk.getX() + 1, chunk.getZ(), 0);
-	}
+	//else
+	//{
+	//	posXChunk = new Chunk(chunk.getX() + 1, chunk.getZ(), 0);
+	//	generateLand();
+	//	generateTree()
+	//}
 
 	//negX
 	if (loadedChunksMap.count(negXpair))
 	{
 		negXChunk = loadedChunksMap.at(negXpair).get();
 	}										    
-	else
-	{
-		negXChunk = new Chunk(chunk.getX() - 1, chunk.getZ(), 0);
-	}
+	//else
+	//{
+	//	negXChunk = new Chunk(chunk.getX() - 1, chunk.getZ(), 0);
+	//}
 
 	//posZ
 	if (loadedChunksMap.count(posZpair))
@@ -68,20 +70,20 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 		posZChunk = loadedChunksMap.at(posZpair).get();
 
 	}										    
-	else
-	{
-		posZChunk = new Chunk(chunk.getX(), chunk.getZ() + 1, 0);
-	}
+	//else
+	//{
+	//	posZChunk = new Chunk(chunk.getX(), chunk.getZ() + 1, 0);
+	//}
 
 	//negZ
 	if (loadedChunksMap.count(negZpair))
 	{
 		negZChunk = loadedChunksMap.at(negZpair).get();
 	}										    
-	else
-	{
-		negZChunk = new Chunk(chunk.getX(), chunk.getZ() - 1, 0);
-	}
+	//else
+	//{
+	//	negZChunk = new Chunk(chunk.getX(), chunk.getZ() - 1, 0);
+	//}
 
 	std::vector<int32_t> mesh;
 	for (int k = 0; k < CHUNK_HEIGHT; k++)
@@ -213,14 +215,14 @@ MeshGenerator::Mesh MeshGenerator::generateMesh(const Chunk& chunk, std::unorder
 		}
 	}
 
-	if (!loadedChunksMap.count(posXpair)) 
-		delete posXChunk;
-	if (!loadedChunksMap.count(negXpair))
-		delete negXChunk;
-	if (!loadedChunksMap.count(posZpair))
-		delete posZChunk;
-	if (!loadedChunksMap.count(negZpair))
-		delete negZChunk;
+	//if (!loadedChunksMap.count(posXpair)) 
+	//	delete posXChunk;
+	//if (!loadedChunksMap.count(negXpair))
+	//	delete negXChunk;
+	//if (!loadedChunksMap.count(posZpair))
+	//	delete posZChunk;
+	//if (!loadedChunksMap.count(negZpair))
+	//	delete negZChunk;
 
 	return MeshGenerator::Mesh( chunk.getX(), chunk.getZ(), mesh );
 }
