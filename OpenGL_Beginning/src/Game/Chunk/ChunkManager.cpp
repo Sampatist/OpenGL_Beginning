@@ -14,7 +14,7 @@
 #include <queue>
 #include <unordered_set>
 #include "IsTerrainReady.h"
-#include "Serialization/readWritendParty.h"
+#include "Serialization/ChunksBlockInfo.h"
 #include "TerrainGenerator.h"
 
 static std::unordered_map<std::pair<int, int>, std::unique_ptr<Chunk>, hash_pair> loadedChunksMap;
@@ -38,23 +38,12 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	for (auto it = loadedChunksMap.begin(); it != loadedChunksMap.end();) {
 		Chunk& chunk = *it->second;
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
-        {
-			//if (chunk.getX() == 0 && chunk.getZ() == 0)
-			//{
-			//	std::unordered_map<int, std::string> chunkSaveData;
-			//	
-			//	char* compressed = new char[16 * 16 * 256];
-			//	{
-			//		int sizecompressed = LZ4_compress_default((const char*)(chunk.getBlocks()), compressed, 16 * 16 * 256, 16 * 16 * 256);
-			//		std::string str(compressed, sizecompressed);
-			//		chunkSaveData[0] = str;
-
-			//		std::ofstream os("res/saveFiles/deneme", std::ios::binary);
-			//		cereal::BinaryOutputArchive archive(os);
-			//		archive(chunkSaveData);
-			//	}
-			//	delete[] compressed;
-			//}
+     {
+			IsTerrainManager::IsTerrainReady.at(it->first).unLoaded.store(true);
+			if (chunk.isChunkChanged)
+			{
+				Serialize::serializeChunk(chunk);
+			}
 			ChunkManager::loadedChunksLock.lock();
             it = loadedChunksMap.erase(it);
 			ChunkManager::loadedChunksLock.unlock();
@@ -97,8 +86,14 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 				ChunkManager::loadedChunksLock.lock();
 				loadedChunksMap[chunkLocation] = std::make_unique<Chunk>(chunkX, chunkZ, 0);
 				ChunkManager::loadedChunksLock.unlock();
-				TerrainGenerator::generateLand(*loadedChunksMap[chunkLocation]);
-				TerrainGenerator::generateTree(*loadedChunksMap[chunkLocation], loadedChunksMap);
+        
+				if(!Serialize::tryDeserializeChunk(*loadedChunksMap.at(chunkLocation)))
+				{
+					TerrainGenerator::generateLand(*loadedChunksMap[chunkLocation]);
+          TerrainGenerator::generateTree(*loadedChunksMap[chunkLocation], loadedChunksMap);
+				}
+				IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.store(true);
+
 			}
 
 			chunkCount++;
@@ -223,7 +218,8 @@ static void reloadUpdatedChunks()
 		ChunkManager::loadedChunksLock.lock();
 		if(loadedChunksMap.find(location) != loadedChunksMap.end())
 		{
-			Chunk& chunk = *loadedChunksMap.at(location);    
+			Chunk& chunk = *loadedChunksMap.at(location);  
+			chunk.isChunkChanged = true;
 			ChunkManager::blockUpdateMeshes.push(MeshGenerator::generateMesh(chunk, loadedChunksMap));
 		}
 		ChunkManager::loadedChunksLock.unlock();

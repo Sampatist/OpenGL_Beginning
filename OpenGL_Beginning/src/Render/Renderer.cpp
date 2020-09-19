@@ -68,7 +68,7 @@ void Renderer::initialize()
     /*INPUT = DefaultFrameRate/FrameLimit ///// DefaultFrameRate = (60hz)*/
     
     //glfwSetWindowMonitor(window, glfwGetPrimaryMonitor(), 0, 0, 1920, 1080, GLFW_DONT_CARE);
-    glfwSwapInterval(1);           
+    glfwSwapInterval(0);           
 
     if (glewInit() != GLEW_OK)
         return;

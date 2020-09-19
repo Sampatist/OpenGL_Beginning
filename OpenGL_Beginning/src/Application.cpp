@@ -70,15 +70,11 @@ int main(void)
             frameCount = 0;
             lastTime = glfwGetTime();
         }
-        //////
-
-        /* Render here */
 
         Game::run();
 
-        Renderer::endFrame();
     }
-
-    Renderer::terminate();
+    //Close Game
+    Game::terminate();
     return 0;
 }

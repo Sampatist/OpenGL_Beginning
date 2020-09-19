@@ -7,6 +7,7 @@
 #include "PhysicsEngine/PhysicalObjects.h"
 #include "Shadows.h"
 #include "Chunk/IsTerrainReady.h"
+#include "Serialization/ChunksBlockInfo.h"
 
 void Game::initialize()
 {
@@ -17,6 +18,7 @@ void Game::initialize()
 	inputManager::initialize();
 
 	IsTerrainManager::initilaizeIsTerrain();
+	Serialize::initialize();
 	ChunkManager::start();
 }
 
@@ -34,4 +36,13 @@ void Game::run()
     ChunkManager::update();
 	Renderer::bufferChunks();
 	Renderer::draw();
+	// shut the fuck up bitch
+	//Last Always
+    Renderer::endFrame();
+}
+
+void Game::terminate()
+{
+	Serialize::CloseAndSaveSavedChunksLocationSetsMap();
+	Renderer::terminate();
 }
