@@ -1,7 +1,7 @@
 #include "rayCast.h"
 #include "Chunk/IsTerrainReady.h"
 
-RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit = 30)
+RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit)
 {
 	glm::vec<3, double, glm::packed_highp> hitNormal;
 	dir = glm::normalize(dir);
@@ -71,10 +71,8 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 
 		if(IsTerrainManager::isChunkCreatedAndLoaded(location))
 		{
-			int blockChunkX = rayBlockX % CHUNK_WIDTH;
-			blockChunkX = blockChunkX + (blockChunkX < 0) * CHUNK_WIDTH;
-			int blockChunkZ = rayBlockZ % CHUNK_LENGTH;
-			blockChunkZ = blockChunkZ + (blockChunkZ < 0) * CHUNK_LENGTH;
+			int blockChunkX = rayBlockX % CHUNK_WIDTH + (rayBlockX < 0) * CHUNK_WIDTH;
+			int blockChunkZ = rayBlockZ % CHUNK_LENGTH + (rayBlockZ < 0) * CHUNK_LENGTH;
 
 			//POSSIBLE PROBLEM WITH LOCK LINE 82 -> LINE 87
 			//ChunkManager::loadedChunksLock.lock();

@@ -7,4 +7,5 @@ namespace Game
 {
 	void initialize();
 	void run();
+	void terminate();
 }

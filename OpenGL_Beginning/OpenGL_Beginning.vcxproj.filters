@@ -39,6 +39,7 @@
     <ClCompile Include="src\Game\Time.cpp" />
     <ClCompile Include="src\Serialization\readWritendParty.cpp" />
     <ClCompile Include="src\vendor\Lz4\lz4.c" />
+    <ClCompile Include="src\Serialization\ChunksBlockInfo.cpp" />
   </ItemGroup>
   <ItemGroup>
     <None Include="res\shaders\Basic.shader" />
@@ -455,6 +456,7 @@
     <None Include="res\skybox\skybox.zip" />
     <None Include="res\shaders\Debug.shader" />
     <None Include="src\vendor\cereal\external\rapidxml\manual.html" />
+    <None Include="res\saveFiles\SavedChunksLocationSetsMap" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="src\vendor\glm\detail\_features.hpp">
@@ -1657,10 +1659,12 @@
     <ClInclude Include="src\Game\Chunk\IsTerrainReady.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="src\Serialization\ChunksBlockInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Text Include="res\settings.txt" />
-    <Text Include="res\saveFiles\test.txt" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="res\skybox\Faces\back.png">

@@ -19,5 +19,5 @@ namespace RayCast
 		Block block;
 	};
 
-	Info castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit);
+	Info castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packed_highp> pos, glm::vec<3, double, glm::packed_highp> dir, double rayLength, int limit = 30);
 }

@@ -14,7 +14,7 @@
 #include <queue>
 #include <unordered_set>
 #include "IsTerrainReady.h"
-#include "Serialization/readWritendParty.h"
+#include "Serialization/ChunksBlockInfo.h"
 #include "TerrainGenerator.h"
 
 static std::unordered_map<std::pair<int, int>, std::unique_ptr<Chunk>, hash_pair> loadedChunksMap;
@@ -39,21 +39,9 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
         {
 			IsTerrainManager::IsTerrainReady.at(it->first).unLoaded.store(true);
-			if (chunk.getX() == 0 && chunk.getZ() == 0)
+			if (chunk.isChunkChanged)
 			{
-				std::unordered_map<int, std::string> chunkSaveData;
-				
-				char* compressed = new char[16 * 16 * 256];
-				{
-					int sizecompressed = LZ4_compress_default((const char*)(chunk.getBlocks()), compressed, 16 * 16 * 256, 16 * 16 * 256);
-					std::string str(compressed, sizecompressed);
-					chunkSaveData[0] = str;
-
-					std::ofstream os("res/saveFiles/deneme", std::ios::binary);
-					cereal::BinaryOutputArchive archive(os);
-					archive(chunkSaveData);
-				}
-				delete[] compressed;
+				Serialize::serializeChunk(chunk);
 			}
 			ChunkManager::loadedChunksLock.lock();
             it = loadedChunksMap.erase(it);
@@ -91,7 +79,10 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 				ChunkManager::loadedChunksLock.lock();
 				loadedChunksMap[chunkLocation] = std::make_unique<Chunk>(chunkX, chunkZ, 0);
 				ChunkManager::loadedChunksLock.unlock();
-				TerrainGenerator::generateLand(*loadedChunksMap[chunkLocation]);
+				if(!Serialize::tryDeserializeChunk(*loadedChunksMap.at(chunkLocation)))
+				{
+					TerrainGenerator::generateLand(*loadedChunksMap[chunkLocation]);
+				}
 				IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.store(true);
 			}
 
@@ -230,7 +221,8 @@ static void reloadUpdatedChunks()
 		ChunkManager::loadedChunksLock.lock();
 		if(loadedChunksMap.find(location) != loadedChunksMap.end())
 		{
-			Chunk& chunk = *loadedChunksMap.at(location);    
+			Chunk& chunk = *loadedChunksMap.at(location);  
+			chunk.isChunkChanged = true;
 			ChunkManager::blockUpdateMeshes.push(MeshGenerator::generateMesh(chunk, loadedChunksMap));
 		}
 		ChunkManager::loadedChunksLock.unlock();
@@ -259,15 +251,16 @@ void ChunkManager::update()
 
 	if((cameraChunkX != oldCamChunkX) || (cameraChunkZ != oldCamChunkZ))
 	{
+		stop.store(true);
+
 		oldCamChunkX = cameraChunkX;
 		oldCamChunkZ = cameraChunkZ;
 
 		IsTerrainManager::deleteUnloadedChunks();
 		IsTerrainManager::createLoadableChunks(oldCamChunkX, oldCamChunkZ);
-		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
 
+		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
 		queueEmpty = false;
-		stop.store(true);
 	}
 	if(head.wait_for(std::chrono::seconds(0)) == std::future_status::ready && !queueEmpty)
 	{

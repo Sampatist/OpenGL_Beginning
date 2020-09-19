@@ -16,7 +16,8 @@ void PhysicsObject::update()
 	Renderer::drawDebugBox({ glm::vec<3, double, glm::packed_highp>(position.x - this->hitbox.w / 2,position.y - this->hitbox.h / 2,position.z - this->hitbox.d / 2), hitbox.w, hitbox.h, hitbox.d,  glm::vec<3, double, glm::packed_highp>(1.0f, 0.0f, 0.7f) });
 	
 	auto drag = 1 - pow(glm::length(velocity), 2) * dragCoef;
-	acceleration = (((currentForce) / mass) + Time::getDeltaRealGameTime() * (hasGravity ? gravity : glm::vec<3, double, glm::packed_highp>(0.0f))) * drag;
+	acceleration = (((currentForce) / mass) + Time::getDeltaRealGameTime() * 
+		(hasGravity ? gravity : glm::vec<3, double, glm::packed_highp>(0.0f))) * double(drag==drag);
 	currentForce = glm::vec<3, double, glm::packed_highp>(0);
 
 	velocity.x += acceleration.x * Time::getDeltaGameTime();
@@ -86,15 +87,15 @@ void PhysicsObject::update()
 	}
 	else 
 	{
-		velocity.x *= 0.95f;
-		velocity.z *= 0.95f;
+		/*velocity.x *= 0.95f;
+		velocity.z *= 0.95f;*/
 	}
-	if (hasGravity && !isOnGround)
-		velocity.y *= 0.99f;
+	//if (hasGravity && !isOnGround)
+	//	velocity.y *= 0.99f;
 	if(glm::length(velocity) < 0.0001f)
 		velocity = glm::vec3(0);
-	if (glm::length(velocity) > MAXSPEED)
-		velocity = normalize(velocity) * MAXSPEED;
+	//if (glm::length(velocity) > MAXSPEED)
+	//	velocity = normalize(velocity) * MAXSPEED;
 }
 
 void PhysicsObject::addForce(glm::vec<3, double, glm::packed_highp> force)
