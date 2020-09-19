@@ -2,7 +2,7 @@
 #include "glm/trigonometric.hpp"
 #include <glm/detail/type_vec3.hpp>
 
-static	glm::vec<3, double, glm::packed_highp> Position(0.0, 125.0, 2.0);
+static	glm::vec<3, double, glm::packed_highp> Position(100000.0, 225.0, 2.0);
 static	glm::vec<3, double, glm::packed_highp> CameraAngle(0.0, 0.0, -1.0);
 static	glm::vec3 InitialAngle(0.0f, 0.0f, -1.0f);
 

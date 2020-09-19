@@ -117,7 +117,7 @@ void Renderer::initialize()
 
     int dummyChunkPos = cameraChunkX + Settings::viewDistance + 4;
 
-    for (int i = 0; i < chunkCountLookup[Settings::viewDistance]; i++)
+    for (int i = 0; i < chunkCountLookup[Settings::viewDistance - 3]; i++)
     {
         std::pair<int, int> chunkLocation(dummyChunkPos, i);
         drawableMeshes[chunkLocation] = RenderableMesh();
@@ -284,7 +284,7 @@ bool isFar(int x, int z)
 {
 	int relativex = x - (int)floor(Camera::GetPosition().x / CHUNK_WIDTH);
 	int relativez = z - (int)floor(Camera::GetPosition().z / CHUNK_LENGTH);
-	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
+	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance - 2) * (Settings::viewDistance - 2);
 }
 
 void Renderer::bufferChunks()

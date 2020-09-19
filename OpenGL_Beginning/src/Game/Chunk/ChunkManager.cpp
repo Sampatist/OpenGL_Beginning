@@ -33,37 +33,38 @@ static std::atomic<bool> stop = false;
 
 static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
+	std::cout << "waljkedwajhed\n";
 	//Unload Chunks O(n)
 	for (auto it = loadedChunksMap.begin(); it != loadedChunksMap.end();) {
 		Chunk& chunk = *it->second;
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
         {
-			IsTerrainManager::IsTerrainReady.at(it->first).unLoaded.store(true);
-			if (chunk.getX() == 0 && chunk.getZ() == 0)
-			{
-				std::unordered_map<int, std::string> chunkSaveData;
-				
-				char* compressed = new char[16 * 16 * 256];
-				{
-					int sizecompressed = LZ4_compress_default((const char*)(chunk.getBlocks()), compressed, 16 * 16 * 256, 16 * 16 * 256);
-					std::string str(compressed, sizecompressed);
-					chunkSaveData[0] = str;
+			//if (chunk.getX() == 0 && chunk.getZ() == 0)
+			//{
+			//	std::unordered_map<int, std::string> chunkSaveData;
+			//	
+			//	char* compressed = new char[16 * 16 * 256];
+			//	{
+			//		int sizecompressed = LZ4_compress_default((const char*)(chunk.getBlocks()), compressed, 16 * 16 * 256, 16 * 16 * 256);
+			//		std::string str(compressed, sizecompressed);
+			//		chunkSaveData[0] = str;
 
-					std::ofstream os("res/saveFiles/deneme", std::ios::binary);
-					cereal::BinaryOutputArchive archive(os);
-					archive(chunkSaveData);
-				}
-				delete[] compressed;
-			}
+			//		std::ofstream os("res/saveFiles/deneme", std::ios::binary);
+			//		cereal::BinaryOutputArchive archive(os);
+			//		archive(chunkSaveData);
+			//	}
+			//	delete[] compressed;
+			//}
 			ChunkManager::loadedChunksLock.lock();
             it = loadedChunksMap.erase(it);
 			ChunkManager::loadedChunksLock.unlock();
-        }
+		}
 		else
 		{
 			++it;
 		}
     }
+	std::cout << "asddsasadsda\n";
 
 	int chunkCount = 0;
 	int chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
@@ -74,8 +75,13 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 	int meshChunkX = indexLookup[meshChunkCount * 2] + cameraChunkX;
 	int meshChunkZ = indexLookup[meshChunkCount * 2 + 1] + cameraChunkZ;
 
-	for (size_t i = 0; i < renderDistance; i++)
+	int deferredChunkCount = 0;
+	int defChunkX = indexLookup[deferredChunkCount * 2] + cameraChunkX;
+	int defChunkZ = indexLookup[deferredChunkCount * 2 + 1] + cameraChunkZ;
+
+	for (int i = 1; i < renderDistance; i += 1)
 	{
+		//std::cout << "chunk land " << i + 1 << std::endl;
 		while (chunkCount < chunkCountLookup[i+1])
 		{
 			std::pair<int, int> chunkLocation(chunkX, chunkZ);
@@ -92,7 +98,7 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 				loadedChunksMap[chunkLocation] = std::make_unique<Chunk>(chunkX, chunkZ, 0);
 				ChunkManager::loadedChunksLock.unlock();
 				TerrainGenerator::generateLand(*loadedChunksMap[chunkLocation]);
-				IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.store(true);
+				TerrainGenerator::generateTree(*loadedChunksMap[chunkLocation], loadedChunksMap);
 			}
 
 			chunkCount++;
@@ -100,7 +106,29 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 			chunkZ = indexLookup[chunkCount * 2 + 1] + cameraChunkZ;
 		}
 
-		while (meshChunkCount < chunkCountLookup[i])
+		//std::cout << "chunk tree " << i << std::endl;
+		while (deferredChunkCount < chunkCountLookup[i - 1])
+		{
+			std::pair<int, int> chunkLocation(defChunkX, defChunkZ);
+			if (!loadedChunksMap[chunkLocation]->treeReady.load())
+			{
+				if (stop.load())
+				{
+					stop.store(false);
+					return;
+				}
+				TerrainGenerator::generateTree(*loadedChunksMap[chunkLocation], loadedChunksMap);
+				loadedChunksMap[chunkLocation]->treeReady.store(true);
+				IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.store(true);
+			}
+
+			deferredChunkCount++;
+			defChunkX = indexLookup[deferredChunkCount * 2] + cameraChunkX;
+			defChunkZ = indexLookup[deferredChunkCount * 2 + 1] + cameraChunkZ;
+		}
+
+		//std::cout << "chunk mesh " << i - 1 << std::endl;
+		while (meshChunkCount < chunkCountLookup[i - 2])
 		{
 			std::pair<int, int> chunkLocation(meshChunkX, meshChunkZ);
 			Chunk& chunk = *loadedChunksMap.at(chunkLocation);
@@ -140,41 +168,6 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 			meshChunkZ = indexLookup[meshChunkCount * 2 + 1] + cameraChunkZ;
 		}
 	}
-
-	//while (meshChunkCount < chunkCountLookup[renderDistance])
-	//{
-	//	std::pair<int, int> chunkLocation(meshChunkX, meshChunkZ);
-	//	Chunk& chunk = *loadedChunksMap.at(chunkLocation);
-	//	if (!chunk.isMeshReady)
-	//	{
-	//		MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
-	//
-	//		chunk.isMeshReady = true;
-	//		ChunkManager::meshLock.lock();
-	//		ChunkManager::chunkMeshes.push_back(mesh);
-	//		ChunkManager::meshLock.unlock();
-	//	}
-	//	else
-	//	{
-	//		ChunkManager::bufferMapLock.lock();
-	//		if (ChunkManager::bufferedInfoMap.find(chunkLocation) == ChunkManager::bufferedInfoMap.end())
-	//		{
-	//			MeshGenerator::Mesh mesh = MeshGenerator::generateMesh(chunk, loadedChunksMap);
-	//			ChunkManager::bufferMapLock.unlock();
-	//
-	//			ChunkManager::meshLock.lock();
-	//			ChunkManager::chunkMeshes.push_back(mesh);
-	//			ChunkManager::meshLock.unlock();
-	//		}
-	//		else
-	//		{
-	//			ChunkManager::bufferMapLock.unlock();
-	//		}
-	//	}
-	//	meshChunkCount++;
-	//	meshChunkX = indexLookup[meshChunkCount * 2] + cameraChunkX;
-	//	meshChunkZ = indexLookup[meshChunkCount * 2 + 1] + cameraChunkZ;
-	//}
 }
 
 
@@ -259,15 +252,16 @@ void ChunkManager::update()
 
 	if((cameraChunkX != oldCamChunkX) || (cameraChunkZ != oldCamChunkZ))
 	{
+		stop.store(true);
+
 		oldCamChunkX = cameraChunkX;
 		oldCamChunkZ = cameraChunkZ;
 
-		IsTerrainManager::deleteUnloadedChunks();
+		IsTerrainManager::deleteUnloadedChunks(oldCamChunkX, oldCamChunkZ);
 		IsTerrainManager::createLoadableChunks(oldCamChunkX, oldCamChunkZ);
-		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
 
+		queued = std::make_pair(oldCamChunkX, oldCamChunkZ);
 		queueEmpty = false;
-		stop.store(true);
 	}
 	if(head.wait_for(std::chrono::seconds(0)) == std::future_status::ready && !queueEmpty)
 	{
@@ -275,7 +269,7 @@ void ChunkManager::update()
 		stop.store(false);
 		head = std::async(std::launch::async, reloadChunks, queued.first, queued.second);
 	}
-	
+	// :(
 }
 
 // must lock loadedChunksLock before calling
