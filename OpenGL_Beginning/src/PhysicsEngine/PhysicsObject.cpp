@@ -8,7 +8,7 @@
 #include "Time.h"
 
 constexpr double dragCoef = 0.15;
-const glm::vec<3, double, glm::packed_highp> gravity(0.0, 0.0, 0.0);
+const glm::vec<3, double, glm::packed_highp> gravity(0.0, -0.8, 0.0);
 constexpr double MAXSPEED = 100.0;
 
 void PhysicsObject::update()

@@ -56,7 +56,8 @@ static std::vector<glm::vec2> calculateHull(std::vector<glm::vec2> points)
 
 void ViewFrustum::initialize()
 {
-    viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
+    glm::dvec3 camRelativePos = Camera::GetRelativeCamPosition();
+    viewMatrix = glm::lookAt(camRelativePos, camRelativePos + Camera::GetCameraAngle(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
     projectionMatrix = glm::perspective(glm::radians(Settings::fov), 16.0f/9.0f, Settings::ZNEAR, Settings::ZFAR);
     hull.reserve(8);
 }
@@ -76,7 +77,8 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
     std::vector<glm::vec2> points;
     points.reserve(8);
 
-    auto viewInverse = glm::inverse(glm::lookAt(Camera::GetPosition() - Camera::GetCameraAngle() * 32.0, Camera::GetPosition(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f)));
+    glm::dvec3 camRelativePos = Camera::GetRelativeCamPosition();
+    auto viewInverse = glm::inverse(glm::lookAt(camRelativePos - Camera::GetCameraAngle() * 32.0, camRelativePos, glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f)));
     auto projInverse = glm::inverse(projectionMatrix);
 
     glm::vec<4, double, glm::packed_highp> Point1 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>( 1.0,  1.0,  1.0, 1.0);
@@ -95,28 +97,6 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
     Point7 /= Point7.w;                            
     glm::vec<4, double, glm::packed_highp> Point8 = viewInverse * projInverse * glm::vec<4, double, glm::packed_highp>(-1.0, -1.0, -1.0, 1.0); //2
     Point8 /= Point8.w;
-    //point7den  point8e giden line,, point7.x + (point8.x - point7.x)t, point7.y + (point8.y - point7.y)t, point7.z + (point8.z - point7.z)t;
-    //if point8.y < 0 -> point7.y + (point8.y - point7.y)t=0 -> t = point7.y/(point7.y - point8.y) -> p78 = point8-point7 -> p78 = p78 * t
-    // p78 = p78 * (point7.y/(point7.y - point8.y)) = p78 = (point8-point7) * (point7.y/(point7.y - point8.y)) = 
-    // = ((p8.x-p7.x) * p7.y/(p7.y-p8.y), -p7.y, (p8.z-p7.z) * p7.y/(p7.y-p8.y))
-    // + p7 = (((p8.x-p7.x) * p7.y/(p7.y-p8.y)) + p7.x, 0, ((p8.z-p7.z) * p7.y/(p7.y-p8.y)) + p7.z) = p8
-
-    //
-    //glm::vec3 D = glm::vec3(Point7 - Point8);
-    //glm::vec3 N = glm::vec3(0.0f, 1.0f, 0.0f);
-    //Point7 = glm::vec4(glm::vec3(Point8) + D * glm::dot(glm::vec3(0.0f) - glm::vec3(Point8), N) / glm::dot(D, N), 1.0f);
-
-    //p8.y > 256 -> point7.y + (point8.y - point7.y)t= 256 -> (256 - p7.y)/(point8.y - point7.y) = t
-    // a = (256 - p7.y)/(point8.y - point7.y)
-    // p78 = p8-p7, p78 = p78 * t = (p8-p7) * (256 - p7.y)/(point8.y - point7.y) = ( (p8.x-p7.x) * a, (p8.y-p7.y) * a, (p8.z-p7.z) * a )
-    // p78 + p7 = vec4( ((p8.x-p7.x) * a) + p7.x, ((p8.y-p7.y) * a) + p7.y, ((p8.z-p7.z) * a) + p7.z ) 
-    //((p8.y - p7.y) * a) + p7.y = 256
-    // p78 + p7 = vec4( ((p8.x-p7.x) * a) + p7.x, 256, ((p8.z-p7.z) * a) + p7.z ) 
-    // a = (256 - p7.y)/(point8.y - point7.y)
-
-    //Ycap
-    // a = (cap - p7.y)/(point8.y - point7.y)
-    // p78 + p7 = vec4( ((p8.x-p7.x) * a) + p7.x, cap, ((p8.z-p7.z) * a) + p7.z )
 
     if(Camera::GetCameraAngle().y > 0)
     {
@@ -165,30 +145,6 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
 	    }
 	}
 
-    /*
-
-    The ray is defined by a point R0 and a direction D.
-    The plane is defined by a triangle with the three points PA, PB, and PC.
-
-    The normal vector of the plane can be calculated by the cross product of 2 legs of the triangle:
-
-    N  =  cross(PC-PA, PB-PA)
-    The normal distance n of the point R0 to the plane is:
-
-    n  =  | R0 - PA | * cos(alpha)  =  dot(PA - R0, N)
-    It follows that the distance d of the intersection point X to the origin of the ray R0 is:
-
-    d  =  n / cos(beta)  =  n / dot(D, N)
-    The intersection point X is:
-
-    X  =  R0 + D * d  =  R0 + D * dot(PA - R0, N) / dot(D, N)
-    */
-   // std::cout << Point7.x << " " << Point7.y << " "<< Point7.z << "\n";
-   // std::cout << Point5.x << " " << Point5.y << " " << Point5.z << "\n";
-   // std::cout << Point3.x << " " << Point3.y << " " << Point3.z << "\n";
-   // std::cout << Point1.x << " " << Point1.y << " " << Point1.z << "\n\n\n";
-
-
     points.push_back(glm::vec2(Point1.x, Point1.z));
     points.push_back(glm::vec2(Point2.x, Point2.z));
     points.push_back(glm::vec2(Point3.x, Point3.z));
@@ -203,12 +159,14 @@ static std::vector<glm::vec2> calculateCameraPointsAndCastTo2D()
 
 void ViewFrustum::update()
 {
-	viewMatrix = glm::lookAt(Camera::GetPosition(), Camera::GetPosition() + Camera::GetCameraAngle(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
+    glm::dvec3 camRelativePos = Camera::GetRelativeCamPosition();
+	viewMatrix = glm::lookAt(camRelativePos, camRelativePos + Camera::GetCameraAngle(), glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
     hull = calculateHull(calculateCameraPointsAndCastTo2D());
 }
 
 bool ViewFrustum::contains2D(glm::vec2 pos)
 {
+    pos = glm::vec2(pos.x - Camera::GetRelativeCamXOffsetCoeff(), pos.y - Camera::GetRelativeCamZOffsetCoeff());
     for(int i = 0; i < hull.size(); i++)
     {
         auto a = pos - hull[i];

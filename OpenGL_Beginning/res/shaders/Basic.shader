@@ -1,5 +1,5 @@
 #shader vertex
-#version 400 core
+#version 330 core
 
 layout(location = 0) in int data;
 
@@ -35,13 +35,13 @@ void main()
 	n = normalIndex;
 	normal = NORMALS[normalIndex];
 	vec3 position = vec3(x, y, z);
-	camDir = vec3(u_CamPos - position);
-	fragPosSunViewSpace = vec4(u_SunViewProjectionMatrix * vec4(position.xyz, 1.0f));
-	gl_Position = u_Projection * u_View * vec4(dvec4(position.xyz, 1.0f));
+	camDir = u_CamPos - position;
+	fragPosSunViewSpace = u_SunViewProjectionMatrix * vec4(position.xyz, 1.0f);
+	gl_Position = u_Projection * u_View * vec4(position.xyz, 1.0f);
 };
 
 #shader fragment
-#version 400 core
+#version 330 core
 
 in vec3 normal;
 in vec3 camDir;

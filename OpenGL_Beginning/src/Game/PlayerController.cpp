@@ -23,7 +23,7 @@ static	glm::vec<3, double, glm::packed_highp> forward_vector(0.0f);
 static float mouseX = 0.0f;
 static float mouseY = 0.0f;
 
-static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 15.8f, 16.8f, 15.8f});
+static PhysicsObject player(Camera::GetPosition(), 50, {0.0f, 0.0f, 0.0f, 0.8f, 1.7f, 0.8f});
 
 static bool isCreative = false;
 

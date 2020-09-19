@@ -2,9 +2,12 @@
 #include "glm/trigonometric.hpp"
 #include <glm/detail/type_vec3.hpp>
 
-static	glm::vec<3, double, glm::packed_highp> Position(100000.0, 225.0, 2.0);
-static	glm::vec<3, double, glm::packed_highp> CameraAngle(0.0, 0.0, -1.0);
-static	glm::vec3 InitialAngle(0.0f, 0.0f, -1.0f);
+static glm::vec<3, double, glm::packed_highp> Position(1000000.0, 225.0, 0.0);
+static glm::vec<3, double, glm::packed_highp> RelativePosition(Position);
+static glm::vec<3, double, glm::packed_highp> CameraAngle(0.0, 0.0, -1.0);
+static glm::vec<3, double, glm::packed_highp> InitialAngle(CameraAngle);
+
+constexpr int HOWRELATIVE = 10000;
 
 void Camera::setAngle(float pitchAngle, float yawAngle)
 {
@@ -24,6 +27,7 @@ void Camera::setAngle(float pitchAngle, float yawAngle)
 void Camera::setPosition(glm::vec<3, double, glm::packed_highp> value)
 {
     Position = value;
+    RelativePosition = Position - glm::dvec3(1.0, 0.0, 0.0) * (double)GetRelativeCamXOffsetCoeff() - glm::dvec3(0.0, 0.0, 1.0) * (double)GetRelativeCamZOffsetCoeff();
 }
 
 const glm::vec<3, double, glm::packed_highp>& Camera::GetPosition()
@@ -34,4 +38,19 @@ const glm::vec<3, double, glm::packed_highp>& Camera::GetPosition()
 const glm::vec<3, double, glm::packed_highp>& Camera::GetCameraAngle()
 {
     return CameraAngle;
+}
+
+const int Camera::GetRelativeCamXOffsetCoeff() 
+{
+    return ((int)Camera::GetPosition().x / HOWRELATIVE) * HOWRELATIVE;
+}
+
+const int Camera::GetRelativeCamZOffsetCoeff()
+{
+    return ((int)Camera::GetPosition().z / HOWRELATIVE) * HOWRELATIVE;
+}
+
+const glm::dvec3 Camera::GetRelativeCamPosition()
+{
+    return RelativePosition;
 }

@@ -71,8 +71,8 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 
 		if(IsTerrainManager::isChunkCreatedAndLoaded(location))
 		{
-			int blockChunkX = rayBlockX % CHUNK_WIDTH + (rayBlockX < 0) * CHUNK_WIDTH;
-			int blockChunkZ = rayBlockZ % CHUNK_LENGTH + (rayBlockZ < 0) * CHUNK_LENGTH;
+			int blockChunkX = rayBlockX % CHUNK_WIDTH + (rayBlockX % CHUNK_WIDTH < 0) * CHUNK_WIDTH;
+			int blockChunkZ = rayBlockZ % CHUNK_LENGTH + (rayBlockZ % CHUNK_LENGTH < 0) * CHUNK_LENGTH;
 
 			ChunkManager::loadedChunksLock.lock();
 			auto chunk = ChunkManager::lock_getChunk(location);

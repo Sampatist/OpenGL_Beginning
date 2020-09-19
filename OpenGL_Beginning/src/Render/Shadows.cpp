@@ -64,7 +64,7 @@ void Sun::update()
 
 glm::mat<4, 4, double, glm::packed_highp> Shadows::calculateSunVPMatrix()
 {
-    auto sunPos = sunDir * 100.0 + Camera::GetPosition();
+    auto sunPos = sunDir * 100.0 + Camera::GetRelativeCamPosition();
 	glm::mat<4, 4, double, glm::packed_highp> view = glm::lookAt(sunPos, sunPos - sunDir, glm::vec<3, double, glm::packed_highp>(0.0f, 1.0f, 0.0f));
     glm::mat<4, 4, double, glm::packed_highp> proj = glm::ortho(-30.0f, 10.0f, -30.0f, 30.0f, 0.1f, 600.0f);
     return proj * view;

@@ -7,4 +7,7 @@ namespace Camera {
 	void setPosition(glm::vec<3, double, glm::packed_highp> value);
 	const glm::vec<3, double, glm::packed_highp>& GetPosition();
 	const glm::vec<3, double, glm::packed_highp>& GetCameraAngle();
+	const int GetRelativeCamXOffsetCoeff();
+	const int GetRelativeCamZOffsetCoeff();
+	const glm::dvec3 GetRelativeCamPosition();
 };

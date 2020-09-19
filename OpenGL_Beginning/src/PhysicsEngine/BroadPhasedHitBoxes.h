@@ -31,10 +31,8 @@ std::vector<HitBox> getBroadPhasedHitBoxes(const PhysicsObject& p)
 			{
 				int chunkX = floor(double(i) / CHUNK_WIDTH);
 				int chunkZ = floor(double(j) / CHUNK_LENGTH);
-				int chunkBlockX = i % CHUNK_WIDTH;
-				chunkBlockX = chunkBlockX + (chunkBlockX < 0) * CHUNK_WIDTH;
-				int chunkBlockZ = j % CHUNK_LENGTH;
-				chunkBlockZ = chunkBlockZ + (chunkBlockZ < 0) * CHUNK_LENGTH;
+				int chunkBlockX = i % CHUNK_WIDTH + (i % CHUNK_WIDTH < 0) * CHUNK_WIDTH;
+				int chunkBlockZ = j % CHUNK_LENGTH + (j % CHUNK_LENGTH < 0) * CHUNK_LENGTH;
 				int chunkBlockY = k;
 				std::pair<int, int> chunkLocation(chunkX, chunkZ);
 

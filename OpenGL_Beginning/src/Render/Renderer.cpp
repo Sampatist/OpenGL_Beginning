@@ -258,7 +258,7 @@ void Renderer::initialize()
     glBufferData(GL_ARRAY_BUFFER, 1000000, nullptr, GL_STATIC_DRAW);
 
     Shaders::getDebugShader().Bind();
-    Shaders::getDebugShader().SetUniformMatrix4d("u_Projection", 1, GL_FALSE, &projectionMatrix[0][0]);
+    Shaders::getDebugShader().SetUniformMatrix4f("u_Projection", 1, GL_FALSE, &_projectionMatrix[0][0]);
 }
 
 GLFWwindow* const Renderer::getWindow()
@@ -410,7 +410,7 @@ static void drawBackground(glm::vec<3, double, glm::packed_highp>& camPos, glm::
     static glm::mat4x4 _viewMatrix;
     _viewMatrix = viewMatrix;
     Shaders::getBackgroundQuadShader().Bind();
-    Shaders::getBackgroundQuadShader().SetUniform3d("u_CamPos", camPos.x, camPos.y, camPos.z);
+    Shaders::getBackgroundQuadShader().SetUniform3f("u_CamPos", camPos.x, camPos.y, camPos.z);
     Shaders::getBackgroundQuadShader().SetUniform3f("u_lightDir", lightDir.x, lightDir.y, lightDir.z);
     Shaders::getBackgroundQuadShader().SetUniformMatrix4f("u_viewMatrix", 1, GL_FALSE, &_viewMatrix[0][0]);
     glBindBuffer(GL_ARRAY_BUFFER, backgroundQuadBufferObject);
@@ -436,7 +436,7 @@ static void drawShadowMap(glm::mat<4, 4, double, glm::packed_highp>& svpm)
             continue;
         if (drawableMesh.bufferSize == 0)
             continue;
-        Shaders::getSunShadowMapShader().SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
+        Shaders::getSunShadowMapShader().SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH - Camera::GetRelativeCamXOffsetCoeff(), chunkLocation.second * CHUNK_LENGTH - Camera::GetRelativeCamZOffsetCoeff());
         glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
@@ -469,8 +469,8 @@ static void drawChunks(glm::vec<3, double, glm::packed_highp>& camPos, glm::vec<
             continue;
         if (drawableMesh.bufferSize == 0)
             continue;
-
-        Shaders::getChunkShader().SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH, chunkLocation.second * CHUNK_LENGTH);
+        
+        Shaders::getChunkShader().SetUniform2i("u_ChunkOffset", chunkLocation.first * CHUNK_WIDTH - Camera::GetRelativeCamXOffsetCoeff(), chunkLocation.second * CHUNK_LENGTH - Camera::GetRelativeCamZOffsetCoeff());
         glBindBuffer(GL_ARRAY_BUFFER, drawableMesh.vboID);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, chunkIndexBufferObject);
         glEnableVertexAttribArray(0);
@@ -573,7 +573,7 @@ void Renderer::drawDebugBox(DrawableBox box)
 void Renderer::draw()
 {
     //Variables
-    glm::vec<3, double, glm::packed_highp> camPos = Camera::GetPosition();
+    glm::vec<3, double, glm::packed_highp> camPos = Camera::GetRelativeCamPosition();
     glm::vec3 lightDir = Sun::GetDirection();
     glm::vec3 lightDirF = Sun::GetDirectionForw();
     glm::vec3 lightDirB = Sun::GetDirectionBackw();

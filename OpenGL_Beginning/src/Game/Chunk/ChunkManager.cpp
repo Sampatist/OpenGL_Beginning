@@ -33,13 +33,11 @@ static std::atomic<bool> stop = false;
 
 static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 {
-	std::cout << "waljkedwajhed\n";
 	//Unload Chunks O(n)
 	for (auto it = loadedChunksMap.begin(); it != loadedChunksMap.end();) {
 		Chunk& chunk = *it->second;
         if (isFar(chunk.getX(), chunk.getZ(), cameraChunkX, cameraChunkZ))
      {
-			IsTerrainManager::IsTerrainReady.at(it->first).unLoaded.store(true);
 			if (chunk.isChunkChanged)
 			{
 				Serialize::serializeChunk(chunk);
@@ -53,7 +51,6 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 			++it;
 		}
     }
-	std::cout << "asddsasadsda\n";
 
 	int chunkCount = 0;
 	int chunkX = indexLookup[chunkCount * 2] + cameraChunkX;
@@ -90,10 +87,8 @@ static void reloadChunks(int cameraChunkX, int cameraChunkZ)
 				if(!Serialize::tryDeserializeChunk(*loadedChunksMap.at(chunkLocation)))
 				{
 					TerrainGenerator::generateLand(*loadedChunksMap[chunkLocation]);
-          TerrainGenerator::generateTree(*loadedChunksMap[chunkLocation], loadedChunksMap);
+					TerrainGenerator::generateTree(*loadedChunksMap[chunkLocation], loadedChunksMap);
 				}
-				IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.store(true);
-
 			}
 
 			chunkCount++;
