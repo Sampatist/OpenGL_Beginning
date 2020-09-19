@@ -74,14 +74,15 @@ RayCast::Info RayCast::castRayAndGetTheInfoPlease(glm::vec<3, double, glm::packe
 			int blockChunkX = rayBlockX % CHUNK_WIDTH + (rayBlockX < 0) * CHUNK_WIDTH;
 			int blockChunkZ = rayBlockZ % CHUNK_LENGTH + (rayBlockZ < 0) * CHUNK_LENGTH;
 
-			//POSSIBLE PROBLEM WITH LOCK LINE 82 -> LINE 87
-			//ChunkManager::loadedChunksLock.lock();
+			ChunkManager::loadedChunksLock.lock();
 			auto chunk = ChunkManager::lock_getChunk(location);
-			//ChunkManager::loadedChunksLock.unlock();
-			if (int blockID = chunk->getBlock(blockChunkX, blockChunkZ, rayBlockY))
+ 			if (int blockID = chunk->getBlock(blockChunkX, blockChunkZ, rayBlockY))
 			{
+				ChunkManager::loadedChunksLock.unlock();
 				return { true, length, hitNormal, {blockID, std::pair<int, int>(rayChunkX, rayChunkZ), blockChunkX, blockChunkZ, rayBlockY} };
 			}
+			ChunkManager::loadedChunksLock.unlock();
+
 		}
 		else
 		{

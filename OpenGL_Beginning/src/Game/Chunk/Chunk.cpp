@@ -5,9 +5,18 @@
 
 #include "Serialization/readWritendParty.h"
 
-Chunk::Chunk(int x, int z, int y)
-	: x(x), z(z), y(y), blocks({ 0 }) 
+size_t Chunk::getHash()
 {
+	return hash;
+}
+
+Chunk::Chunk(int x, int z, int y)
+	: x(x), z(z), y(y), treeReady(false), blocks({ 0 }), highest({ 0 })
+{
+	auto p_first = std::to_string(x);
+	auto p_second = std::to_string(z);
+
+	hash = std::hash<std::string>{}(p_first + ":" + p_second);
 	//if(x == 0 && z == 0)
 	//{
 	//	std::unordered_map<int, std::string> chunkReadData;

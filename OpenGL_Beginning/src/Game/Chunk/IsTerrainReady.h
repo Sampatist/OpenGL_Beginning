@@ -8,8 +8,14 @@
 struct IsTerrain
 {
 	std::atomic_bool loaded = false;
-	std::atomic_bool unLoaded = false;
 };
+
+static bool isFar(const std::pair<int, int>& location, int x2, int z2)
+{
+	int relativex = location.first - x2;
+	int relativez = location.second - z2;
+	return (relativex * relativex + relativez * relativez) >= (Settings::viewDistance + 1) * (Settings::viewDistance + 1);
+}
 
 namespace IsTerrainManager
 {
@@ -27,20 +33,15 @@ namespace IsTerrainManager
 			if (IsTerrainReady.find(std::pair<int, int>(chunkX, chunkZ)) == IsTerrainReady.end())
 			{
 				IsTerrainReady[std::pair<int, int>(chunkX, chunkZ)].loaded = false;
-				IsTerrainReady[std::pair<int, int>(chunkX, chunkZ)].unLoaded = false;
 			}
-			//std::cout << IsTerrainReady[std::pair<int, int>(chunkX, chunkZ)].unLoaded.load() << std::endl;
-			//IsTerrainReady[std::pair<int, int>(chunkX, chunkZ)].unLoaded = false;
-			//std::cout << IsTerrainReady[std::pair<int, int>(chunkX, chunkZ)].unLoaded.load() << std::endl;
-			//std::cout << IsTerrainReady.size() << "\n";
-			//std::cout << chunkCount << std::endl;
 		}
 	}
-	inline void deleteUnloadedChunks()
+	inline void deleteUnloadedChunks(int oldCamChunkX, int oldCamChunkZ)
 	{
+		std::cout << IsTerrainReady.size() << std::endl;
 		for (auto it = IsTerrainReady.begin(); it != IsTerrainReady.end();)
 		{
-			if(it->second.unLoaded.load())
+			if(isFar(it->first, oldCamChunkX, oldCamChunkZ))
 				it = IsTerrainReady.erase(it);
 			else
 				++it;
@@ -55,6 +56,6 @@ namespace IsTerrainManager
 		createLoadableChunks(initialCameraChunkX, initialCameraChunkZ);
 	}
 	inline bool isChunkCreatedAndLoaded(std::pair<int, int> chunkLocation) {
-		return IsTerrainManager::IsTerrainReady.count(chunkLocation) && IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.load() && !IsTerrainManager::IsTerrainReady.at(chunkLocation).unLoaded.load();
+		return IsTerrainManager::IsTerrainReady.count(chunkLocation) && IsTerrainManager::IsTerrainReady.at(chunkLocation).loaded.load();
 	}
 }

@@ -1,5 +1,6 @@
 #pragma once
 #include <array>
+#include <atomic>
 #define INDEX(X,Z,Y) (X + CHUNK_WIDTH * Z + Y * CHUNK_WIDTH * CHUNK_LENGTH)
 
 constexpr int CHUNK_WIDTH = 16;    //x
@@ -11,7 +12,11 @@ class Chunk
 private:
 	int x, z, y;
 	std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH* CHUNK_HEIGHT> blocks;
+	size_t hash;
 public:
+	std::atomic<bool> treeReady;
+	std::array<uint8_t, CHUNK_WIDTH* CHUNK_LENGTH> highest;
+	size_t getHash();
 	const uint8_t* getBlocks() const { return blocks.data(); };
 	bool isMeshReady = false;
 	int getX() const { return x; };
